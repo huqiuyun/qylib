@@ -19,9 +19,9 @@ public:
 	HRESULT coInitialize();
 	HRESULT coUninitialize();
 
-	HRESULT coRegister(QYREFCLSID rclsid , const QyComRegister* com);
-	HRESULT coUnRegister(QYREFCLSID rclsid , const QyComRegister* com);
-	HRESULT createInstance(QYREFCLSID rclsid , IQyUnknown  * pUnkOuter , QYREFIID riid , LPVOID* ppv);
+	HRESULT coRegister(QY_REFID rclsid , const QyComRegister* com);
+	HRESULT coUnRegister(QY_REFID rclsid , const QyComRegister* com);
+	HRESULT createInstance(QY_REFID rclsid , IQyUnknown  * pUnkOuter , QY_REFID riid , LPVOID* ppv);
 private:
 	friend class QyComFactoryPrivate;
 	QyComFactoryPrivate*  d_ptr_;

@@ -1,11 +1,11 @@
 #ifndef __QY_UTIL_H__
 #define __QY_UTIL_H__
 
-#ifdef QY_UTIL_DLL
+#ifdef QYUTIL_DLL
 
 #if defined(WIN32) || defined(_WIN32) || defined(WINCE)
 
-#ifdef QY_UTIL_EXPORTS
+#ifdef QYUTIL_EXPORTS
 #define QYUTIL_API __declspec(dllexport)
 #else
 #define QYUTIL_API __declspec(dllimport)
@@ -36,18 +36,18 @@ typedef void* QyHMODULE;
 
 #include "qyutil/qydefine.h"
 
-
 DEFINE_NAMESPACE(qy)
 
 BEGIN_EXTERN_C
 
-/** 初始化 */
-QYUTIL_API void qyutil_initialize(void);
-
-/** 反初始 */
-QYUTIL_API void qyutil_unInitialize(void);
+QYUTIL_API void    qyutil_initialize(void);
+QYUTIL_API void    qyutil_unInitialize(void);
 
 END_EXTERN_C
+
+// for qywndmsg.h
+typedef void (*FnMsgPush)(unsigned int msgid,WPARAM wParam , LPARAM& lParam);
+typedef void (*FnMsgRemove)(unsigned int msgid,WPARAM wParam , LPARAM& lParam);
 
 END_NAMESPACE(qy)
 

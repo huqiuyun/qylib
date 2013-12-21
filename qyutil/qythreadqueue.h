@@ -2,7 +2,7 @@
 #define __QY_THREADQUEUE_H__
 
 #include <queue>
-#include "qyutil/qylock.H"
+#include "qyutil/qylock.h"
 #include "qyutil/qythread.h"
 
 DEFINE_NAMESPACE(qy)

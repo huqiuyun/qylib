@@ -29,8 +29,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 
 */
-#ifndef UTIL_DELEGATE_HXX
-#define UTIL_DELEGATE_HXX
+#ifndef __QY_DELEGATE_H__
+#define __QY_DELEGATE_H__
 
 #ifdef _WIN32
 #  include <Windows.h>
@@ -40,9 +40,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <utility> // for pair
 using namespace std;
 
-#include "qythread_policy.hxx"
+#include "qythread_policy.h"
 
-namespace qyUtil
+namespace qy
 {
 
    template<class MT_Policy>
@@ -144,5 +144,5 @@ class Delegate; // no body as to be specialized
 
 typedef qyUtil::Delegate<void (void)> NotifyEvent;
 
-} // namespace qyUtil
-#endif // #ifndef UTIL_DELEGATE_HXX
+} // namespace qy
+#endif // #ifndef __QY_DELEGATE_H__

@@ -49,30 +49,30 @@ QyParserT::QyParserT()
 
 QyParserT::~QyParserT()
 {
-	Clear();
-	qyDeleteM( d_ptr_ );
+	clear();
+	qyDeleteM(d_ptr_);
 }
 
-int  QyParserT::Handle( const CharT* value,bool bDefCB)
+int  QyParserT::handle( const CharT* value,bool bDefCB)
 {
-	return Handle( value , qyos_strlen(value) , bDefCB);
+	return handle( value , qyos_strlen(value) , bDefCB);
 }
 
-int  QyParserT::Handle(const CharT* lpszTxt,size_t len,bool bDefCB)
+int  QyParserT::handle(const CharT* lpszTxt,size_t len,bool bDefCB)
 {
-	Clear();
-	if( len && lpszTxt )
+	clear();
+	if (len && lpszTxt)
 	{
 		d_ptr_->str_ = lpszTxt;
 	}
 	if ( bDefCB )
 	{
-		return HandleCB(NULL);
+		return handleCB(NULL);
 	}
 	return 0;
 }
 
-int  QyParserT::HandleCB(QyPLineParseCallBackT pCB , CharT cspacing)
+int  QyParserT::handleCB(QyPLineParseCallBackT pCB , CharT cspacing)
 {
 	if ( d_ptr_->str_.length() <= 0  )
 		return -1;
@@ -80,7 +80,7 @@ int  QyParserT::HandleCB(QyPLineParseCallBackT pCB , CharT cspacing)
 	return (pCB ? pCB(this,cspacing) : DefLineParseCallbackT(this,cspacing) );
 }
 
-const CharT* QyParserT::String(size_t nRow,int &len ,const CharT *lpszDefault)
+const CharT* QyParserT::string(size_t nRow,int &len ,const CharT *lpszDefault)
 {	
 	if ( d_ptr_->str_.length() <= 0 ) 
 		return lpszDefault;
@@ -97,7 +97,7 @@ const CharT* QyParserT::String(size_t nRow,int &len ,const CharT *lpszDefault)
 	return (lpString + nRow );
 }
 
-int QyParserT::Int(size_t nRow,int nDefault)
+int QyParserT::intValue(size_t nRow,int nDefault)
 {
     if (  d_ptr_->str_.length() <= 0) 
 		return nDefault;
@@ -110,7 +110,7 @@ int QyParserT::Int(size_t nRow,int nDefault)
 	return qyos_atoi(lpString+ nRow );
 }
 
-double QyParserT::Double(size_t nRow,double dDefault)
+double QyParserT::doubleValue(size_t nRow,double dDefault)
 {
     if (  d_ptr_->str_.length() <= 0)
 		return dDefault;
@@ -128,12 +128,12 @@ const CharT* QyParserT::c_str(void)
 	return d_ptr_->str_.c_str();
 }
 
-size_t QyParserT::Length(void) 
+size_t QyParserT::length(void)
 { 
 	return  d_ptr_->str_.length();
 }
 
-void QyParserT::Clear()
+void QyParserT::clear()
 {
 	// »¹Ô­
 	CharT *lpstr = const_cast<CharT*>(c_str());
@@ -149,10 +149,12 @@ void QyParserT::Clear()
 }
 
 
-size_t  QyParserT::Counts(void) const { 
-	return d_ptr_->rows_.size() -1; }
+size_t  QyParserT::counts(void) const {
+	return d_ptr_->rows_.size() -1;
+}
 
 void QyParserT::push(short row) {
-	d_ptr_->rows_.push_back(row);}
+	d_ptr_->rows_.push_back(row);
+}
 
 END_NAMESPACE(qy)

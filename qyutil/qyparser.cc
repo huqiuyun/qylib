@@ -7,10 +7,10 @@
 
 // declare CParserW_lo, et. al.
 #include "qyparser-template-def-unichar.h"
-#include "qyparserT.cpp"
+#include "qyparserT.cc"
 #include "qyparser-template-undef.h"
 
   // declare CParserA_lo, et. al.
 #include "qyparser-template-def-char.h"
-#include "qyparserT.cpp"
+#include "qyparserT.cc"
 #include "qyparser-template-undef.h"

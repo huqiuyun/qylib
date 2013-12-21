@@ -1,6 +1,6 @@
 /**
 *  @brief String opeartion.
-*  @file  tqbytebuffer.h
+*  @file  qybytebuffer.h
 *  @author loach 
 *  @Email < loachmr@sina.com >
 *
@@ -51,9 +51,9 @@ public:
 	QyByteBuffer& operator = (const QyByteBuffer& buffer);
 
 	const char* data() const { return bytes_ + start_; }
-	size_t length() const { return _end_ - start_; }
+	size_t length() const { return end_ - start_; }
 	size_t capacity() const { return size_ - start_; }
-	
+	bool empty() const { return (length() == 0);}
 	void clear(void);
 	void remove(size_t index , size_t size);
 
@@ -121,7 +121,7 @@ private:
 	char* bytes_;
 	size_t size_;
 	size_t start_;
-	size_t _end_;
+	size_t end_;
 };
 
 #if defined(_USE_BYTEINLINE)

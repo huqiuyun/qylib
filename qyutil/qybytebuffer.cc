@@ -1,5 +1,4 @@
 #include "qybytebuffer.h"
-#include "qyosstring.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -24,7 +23,7 @@ QyByteBuffer::QyByteBuffer(int size)
 void QyByteBuffer::construct(int size)
 {
 	start_ = 0;
-	_end_   = 0;
+	end_   = 0;
 	size_  = size;
 	bytes_ = new char[size_+1];
 	bytes_[size_] ='\0';
@@ -33,18 +32,18 @@ void QyByteBuffer::construct(int size)
 QyByteBuffer::QyByteBuffer(const char* bytes, size_t len)
 {
 	start_ = 0;
-	_end_   = len;
+	end_   = len;
 	size_  = len;
 	bytes_ = new char[size_+1];
 	bytes_[size_] = '\0';
-	memcpy(bytes_, bytes, _end_);
+	memcpy(bytes_, bytes, end_);
 }
 
 QyByteBuffer::QyByteBuffer(const QyByteBuffer& buffer)
 :bytes_(0)
 ,start_(0)
 ,size_(0)
-,_end_(0)
+,end_(0)
 {
 	*this = buffer;
 }
@@ -52,7 +51,7 @@ QyByteBuffer::QyByteBuffer(const QyByteBuffer& buffer)
 QyByteBuffer& QyByteBuffer::operator = (const QyByteBuffer& buffer)
 {
 	start_ = 0;
-	_end_   = 0;
+	end_   = 0;
 	write( buffer.data() , buffer.length());
 	return *this;
 }
@@ -150,30 +149,31 @@ void QyByteBuffer::write(const char* val, size_t len)
 	{
 		resize(length() + len);
 	}
-	memcpy(bytes_ + _end_, val, len);
-	_end_ += len;
+	memcpy(bytes_ + end_, val, len);
+	end_ += len;
+	bytes_[end_] = '\0';
 }
 
 void QyByteBuffer::write(size_t index,const char* val,size_t len)
 {
-	if (index >= _end_)
+	if (index >= end_)
 	{
 		write(val,len);
 	}
 	else if (index != SIZE_MAX)
 	{
-		if ((index + len) <= _end_)
+		if ((index + len) <= end_)
 		{
 			memcpy(bytes_ + index, val, len);
 		}
 		else
 		{
-			size_t l = len - (_end_- index);
+			size_t l = len - (end_- index);
 			if (length() + l > capacity())
 				resize(length() + l);
 
 			memcpy(bytes_ + index, val, len);
-			_end_ += l;
+			end_ += l;
 		}
 	}
 }
@@ -184,13 +184,13 @@ void QyByteBuffer::resize(size_t size)
 	{
 		size = MAX_(size, 3 * size_ / 2);
 	}
-	size_t len = MIN_(_end_ - start_, size);
+	size_t len = MIN_(end_ - start_, size);
 	char* new_bytes = new char[size+1];
 	memcpy(new_bytes, bytes_ + start_, len);
 	delete [] bytes_;
 
 	start_ = 0;
-	_end_   = len;
+	end_   = len;
 	size_  = size;
 	bytes_ = new_bytes;
 	bytes_[size_] = '\0';
@@ -201,35 +201,38 @@ void QyByteBuffer::shift(size_t size)
 	if (size > length())
 		return;
 
-	_end_ = length() - size;
-	memmove(bytes_, bytes_ + start_ + size, _end_);
+	end_ = length() - size;
+	if (size>0)
+	{
+		memmove(bytes_, bytes_ + start_ + size, end_);
+	}
 	start_ = 0;
 }
 
 void QyByteBuffer::remove(size_t index , size_t size)
 {
-	if (index >= _end_)
+	if (index >= end_)
 	{
 		return;
 	}
 	else if (index != SIZE_MAX)
 	{
         size_t len = (index + size);
-		if (len >= _end_)
+		if (len >= end_)
 		{
-            size = _end_ - index;
-			_end_ = index;
+            size = end_ - index;
+			end_ = index;
 		}
         else
         {
-            _end_ -= size;
+            end_ -= size;
         }
 	}
 }
 
 void QyByteBuffer::clear(void)
 {
-	shift(0);
+	shift(length());
 }
 
 #if !defined(_USE_BYTEINLINE)

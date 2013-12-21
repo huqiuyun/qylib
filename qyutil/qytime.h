@@ -17,6 +17,26 @@
 
 DEFINE_NAMESPACE(qy)
 
+class QYUTIL_API QyTimer
+{
+public:
+    QyTimer();
+    
+    void reset();
+    void start();
+    uint32 stop();
+    uint32 getTime() const {return time_;}
+    
+protected:
+    int64 getCount();
+    
+private:
+    int64 freq_;
+    int64 start_;
+    uint32  time_;
+};
+
+
 #ifdef POSIX
 inline quint32 qytime_get()
 {
@@ -27,20 +47,21 @@ inline quint32 qytime_get()
 #endif
 
 #ifdef WIN32
-inline quint32 qytime_get()
+
+inline uint32 qytime_get()
 {
     return GetTickCount();
 }
 #endif
 
-inline quint32 qytime_start()
+inline uint32 qytime_start()
 {
     // Close to program execution time
-    static const quint32 g_start = qytime_get();
+    static const uint32 g_start = qytime_get();
     return g_start;
 }
 
-inline bool qytime_isBetween(quint32 later, quint32 middle, quint32 earlier)
+inline bool qytime_isBetween(uint32 later, uint32 middle, uint32 earlier)
 {
     if (earlier <= later) {
         return ((earlier <= middle) && (middle <= later));
@@ -49,11 +70,11 @@ inline bool qytime_isBetween(quint32 later, quint32 middle, quint32 earlier)
     }
 }
 
-inline int32 qytime_diff(quint32 later, quint32 earlier)
+inline int32 qytime_diff(uint32 later, uint32 earlier)
 {
-    quint32 LAST = 0xFFFFFFFF;
-    quint32 HALF = 0x80000000;
-    if (TimeIsBetween(earlier + HALF, later, earlier)) {
+    uint32 LAST = 0xFFFFFFFF;
+    uint32 HALF = 0x80000000;
+    if (qytime_isBetween(earlier + HALF, later, earlier)) {
         if (earlier <= later) {
             return static_cast<long>(later - earlier);
         } else {
@@ -68,7 +89,7 @@ inline int32 qytime_diff(quint32 later, quint32 earlier)
     }
 }
 
-inline quint32 qytime_elapsed()
+inline uint32 qytime_elapsed()
 {
     return qytime_diff(qytime_get(), qytime_start());
 }

@@ -1,22 +1,22 @@
 #ifndef __QY_THREAD_WIN_H__
 #define __QY_THREAD_WIN_H__
 
-#include <windows.h>
+#include "qyutil/qyconfig.h"
 #include "qyutil/qythread.h"
+#include <windows.h>
 
-BEGIN_QYUTIL_NAMESPACE
+DEFINE_NAMESPACE(qy)
 
 class QyThreadWindowPrivate;
-class QYUTIL_API QyThreadWindow : public QyThread {
+class QyThreadWindow : public QyThread {
 public:
     QyThreadWindow(QyThreadRunFunction func, QyThreadObj obj, eThreadPriority prio, const char* thread_name);
     virtual ~QyThreadWindow();
     
     void setNotAlive();
     bool start();
-    bool stop(int msec = 2000);
-    void wait(int msec);
-    void waitUp();
+    bool stop(unsigned long msec = 2000);
+    void wakeUp();
     bool setAffinity(const int* processor_numbers, const unsigned int amount_of_processors);
     QyThreadId threadId() const;
     static unsigned int WINAPI startThread(LPVOID lp_parameter);
@@ -25,9 +25,9 @@ protected:
     virtual void run();
     
 private:
-    QyThreadWindowPrivate d_ptr_;
+    QyThreadWindowPrivate* d_ptr_;
 };
 
-END_QYUTIL_NAMESAPCE
+END_NAMESPACE(qy)
 
-#endif  // __QY_THREAD_WIN_H__
+#endif  // __QY_THREADWIN_H__

@@ -16,7 +16,7 @@ enum eThreadResult
 {
     kTResNone = 1,
     kTResExit = 2,
-    kTResHook = 3, ///< thread hook,and Need to call QyThread::waitUp()
+    kTResHook = 3, ///< thread hook,and Need to call QyThread::wakeUp()
 };
 
 // Object that will be passed by the spawned thread when it enters the callback
@@ -47,6 +47,7 @@ const int kThreadMaxNameLength = 64;
 
 class QYUTIL_API QyThread {
 public:
+	QyThread(){}
     virtual ~QyThread() {};
     
     // Factory method. Constructor disabled.
@@ -58,8 +59,7 @@ public:
     // thread_name  NULL terminated thread name, will be visable in the Windows
     //             debugger.
     static QyThread* createThread(QyThreadRunFunction func,
-                                  QyThreadObj obj,
-                                  eThreadPriority prio = kNormalPriority,
+                                  QyThreadObj obj, eThreadPriority prio = kNormalPriority,
                                   const char* thread_name = 0);
     
     // Get the current thread's kernel thread ID.
@@ -81,9 +81,9 @@ public:
     // of two seconds. Will return false if the thread was not reclaimed.
     // Multiple tries to Stop are allowed (e.g. to wait longer than 2 seconds).
     // It's ok to call Stop() even if the spawned thread has been reclaimed.
-    virtual bool stop(int msec = 2000) = 0;
+    virtual bool stop(unsigned long msec = 2000) = 0;
     
-    virtual void waitUp() = 0;
+    virtual void wakeUp() = 0;
     // Sets the threads CPU affinity. CPUs are listed 0 - (number of CPUs - 1).
     // The numbers in processor_numbers specify which CPUs are allowed to run the
     // thread. processor_numbers should not contain any duplicates and elements
@@ -91,6 +91,8 @@ public:
     // equal to the number of processors listed in processor_numbers.
     virtual bool setAffinity(const int* processor_numbers,
                              const unsigned int amount_of_processors) {
+								 QY_UNUSED(processor_numbers);
+								 QY_UNUSED(amount_of_processors);
         return false;
     }
     

@@ -2,138 +2,65 @@
 #define __QY_LOG_H__
 
 #include "qyutil/qyconfig.h"
-#include "qyutil/qylog_i.h"
 #include <string>
-
-///////////////////////////////////////////////////////
-//	***             * * * *      ****        ****    //
-//	***  	      *         *     **          **     //
-//	***  	     *           *    **          **     //
-//	***  	     *           *    **************     //
-//	***	     **  *           *    **          **     //
-//	***********   *         *     **          **     //
-//	***********	    * * * *      ****        ****    // 
-///////////////////////////////////////////////////////2009-08-20 @loach
 
 DEFINE_NAMESPACE(qy)
 
-class IQyLogNet
+enum eQyLogType
 {
-public:
-    virtual bool write2Net(int type , int level , const char* buffer,size_t len) = 0;
+	kQyLogCout   = 0x1, // output wprintf_s
+	kQyLogCerr   = 0x02, // output std::cerr
+	kQyLogStderr = 0x04, // output std handler,for win32
+    kQyLogFile   = 0x08, // output file
+    kQyLogDebug  = 0x10, // output Debug string for win32 api
+	kQyLogNet    = 0x20, // internet, Need to upload to server
+	kQyLogAll    = 0xFFFF,
 };
 
-class QyLogPrivate;
-/*
-*
-* @author loach.h
-*
-* @date 2009-08-20
-*/
-
-class QYUTIL_API QyLog : public IQyLog
+enum eQyLogLevel
 {
-private:
-	QyLog();
-public:
-	static QyLog* Instance();
-public:
-	~QyLog();
-    void set_log_net(IQyLogNet* net);
-	void set_log_file(const char* filename);
-	void enable_type( int type);
-	void enable_level( int level /*LogLevelFlags*/);
-	virtual bool logString(int type , int level , const char* str);
-	virtual bool logBuffer(int type , int level , const char* buffer,size_t len);
-	virtual bool logFormat(int type , int level , const char* pszFmt, ...);
-private:
-	bool isLevel(int level);
-	bool write2Net(int type , int level , const char* buffer,size_t len);
-private:
-	friend class QyLogPrivate;
-	QyLogPrivate* d_ptr_;
+	kQyLogUnk_LL     = 0x0001,
+    kQyLogErr_LL     = 0x0002,
+	kQyLogWarning_LL = 0x0004,
+	kQyLogInfo_LL    = 0x0008,
+	kQyLogDebug_LL   = 0x0010,
+	kQyLogDev_LL     = 0x0020,
+	kQyLogAll_LL     = 0xFFFF,
 };
 
-
-class QyLogStreamPrivate;
-class QYUTIL_API QyLogStream
+struct QYNovtableM IQyLogOut
 {
-public:
-	QyLogStream(const char* filiter, int loglevel, const char* cppname, int line, const char* funcname);
-	~QyLogStream();
-
-	inline QyLogStream &operator<<(bool b)	  
-	{ return (*this) << (b == true ? L"true" : L"false"); }
-
-    inline QyLogStream &operator<<(char ch)	 
-	{ return (*this) << (signed long)ch; }
-
-    inline QyLogStream &operator<<(signed short i)
-	{ return (*this) << (signed long)i; }
-
-    inline QyLogStream &operator<<(signed int i)	
-	{ return (*this) << (signed long)i; }
-
-    inline QyLogStream &operator<<(unsigned int i)	
-	{ return (*this) << (unsigned long)i; }
-
-    inline QyLogStream &operator<<(unsigned short i)
-	{ return (*this) << (unsigned long)i; }
-
-    inline QyLogStream &operator<<(float f)
-	{ return (*this) << (double)f; }
-
-	inline QyLogStream &operator<<(unsigned long i)		 
-	{ int n = snprintf(setBuffer(16), 16,  "%lu", i); resize(n); return *this; }
-
-    inline QyLogStream &operator<<(signed long i)		 
-	{ int n = snprintf(setBuffer(16), 16,  "%ld", i); resize(n); return *this; }
-
-	inline QyLogStream &operator<<(const void *ptr)		 
-	{ int n = snprintf(setBuffer(16), 16,  "0x%08lX", (unsigned long)ptr); resize(n); return *this; }
-
-	inline QyLogStream &operator<<(__int64 i)
-#if defined(WIN32)
-	{ int n = snprintf(setBuffer(16), 16, "%I64d", i); resize(n); return *this; }
-#else
-    { int n = snprintf(setBuffer(16), 16, "%lld", i); resize(n); return *this; }
-#endif
-    
-    inline QyLogStream &operator<<(double f)
-	{ int n = snprintf(setBuffer(16), 16,  "%0.6f", f);	resize(n); return *this; }
-
-	inline QyLogStream &operator<<(const char* s)
-	{ size_t n = strlen(s); memcpy(setBuffer(n), s, n * sizeof(char)); resize(n); return *this; }
-
-    inline QyLogStream &operator<<(const wchar_t *s)
-	{ size_t len = wcslen(s); size_t n = toChar(s, len); resize(n); return *this; }
-
-	inline QyLogStream &operator<<(const std::wstring &s)
-	{ size_t len = s.length(); size_t n = toChar(s.c_str(), len); resize(n); return *this; }
-
-	inline QyLogStream &operator<<(const std::string &s)
-	{ size_t n = s.length(); memcpy(setBuffer(n), s.c_str(), n * sizeof(char)); resize(n); return *this; }
-
-
-private:
-	/** unicode convert */
-	size_t    toChar(const wchar_t* s , size_t len);
-	void      resize(size_t n);
-	/** buffer */
-	char*     setBuffer(size_t cch);
-
-private:
-	friend class QyLogStreamPrivate;
-	QyLogStreamPrivate* d_ptr_;
+	virtual bool isLog(int type,int level) const = 0;
+	virtual void logOut(int type,int level, const wchar_t*, int length) = 0;
 };
 
+struct QYNovtableM IQyLog
+{
+	virtual void open(const wchar_t* filename,size_t file_max = 2*1024*1024/*2M*/) = 0;
+	virtual void close() = 0;
 
-#define LogFinal(filter_name)	QyLogStream(filter_name, IQyLog::Info, __FILE__, (WORD)__LINE__, __FUNCTION__)
+	virtual void enableType(int type) = 0;
+	virtual void enableLevel(int level) = 0;
 
-#define LogDev(filter_name)		QyLogStream(filter_name, IQyLog::Info, __FILE__, (WORD)__LINE__, __FUNCTION__)
+	virtual void logF(int type, int level, const wchar_t* format, ...) = 0;
+	virtual void logS(int type, int level, const wchar_t* log) = 0;
+	virtual void logS(int type, int level, const wchar_t* log, size_t length) = 0;
+	virtual void logS(int type, int level, const std::wstring& str) = 0;
 
-#define LogTemp(filter_name)	QyLogStream(filter_name, IQyLog::Debug, __FILE__, (WORD)__LINE__, __FUNCTION__)
+	virtual void release() = 0;
+};
+
+BEGIN_EXTERN_C
+// LOG
+QYUTIL_API IQyLog* qyutil_logCreate();
+
+QYUTIL_API void    qyutil_logSet(IQyLogOut* out);
+QYUTIL_API void    qyutil_log(int type, int level, const wchar_t* format, ...);
+
+END_EXTERN_C
 
 END_NAMESPACE(qy)
 
-#endif //__QY_LOG_H__
+#define QY_LOG    qy::qyutil_log
+
+#endif /*__QY_ILOG_H__ */

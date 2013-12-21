@@ -17,7 +17,7 @@ typedef std::list<const QyComRegister*> FactoryList;
 class QyRegisters : public FactoryList
 {
 public:
-	const QYCLSID* rclsid_;
+	const QY_CLSID* rclsid_;
 public:
 	QyRegisters(QYREFCLSID rclsid)
 	{

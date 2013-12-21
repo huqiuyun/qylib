@@ -11,6 +11,7 @@ This software is distributed without any warranty.
 */
 
 #include "qybase64.h"
+#include <stdlib.h>
 
 DEFINE_NAMESPACE(qy)
 

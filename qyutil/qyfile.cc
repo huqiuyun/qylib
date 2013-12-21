@@ -66,8 +66,10 @@ size_t QyFile::getFileSize(const char* filename)
 {
     FILE* f = fopen(filename, "rb");
     size_t size = 0;
-    if (f != NULL) {
-        if (fseek(f, 0, SEEK_END) == 0){
+    if (f != NULL)
+    {
+        if (fseek(f, 0, SEEK_END) == 0)
+        {
             size = ftell(f);
         }
         fclose(f);

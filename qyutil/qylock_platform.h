@@ -19,5 +19,5 @@
 #endif
 
 
-#endif //__QY_THREAD_H__
+#endif //__QY_THREAD_PLATFORM_H__
 

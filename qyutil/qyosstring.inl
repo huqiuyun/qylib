@@ -4,7 +4,7 @@ DEFINE_NAMESPACE(qy)
 qyINLINE const void *
 qyos_memchr (const void *s, int c, size_t len)
 {
-return ::memchr (s, c, len);
+return memchr (s, c, len);
 }
 
 qyINLINE void *
@@ -16,50 +16,50 @@ return const_cast<void *> (qyos_memchr (static_cast<const void *> (s),c,len));
 qyINLINE int
 qyos_memcmp (const void *t, const void *s, size_t len)
 {
-return ::memcmp (t, s, len);
+return memcmp (t, s, len);
 }
 
 qyINLINE void *
 qyos_memcpy (void *t, const void *s, size_t len)
 {
-return ::memcpy (t, s, len);
+return memcpy (t, s, len);
 }
 
 qyINLINE void *
 qyos_memmove (void *t, const void *s, size_t len)
 {
-return ::memmove (t, s, len);
+return memmove (t, s, len);
 }
 
 qyINLINE void *
 qyos_memset (void *s, int c, size_t len)
 {
-return ::memset (s, c, len);
+return memset (s, c, len);
 }
 
 qyINLINE int
 qyos_atoi(const char* s)
 {
-return ::atoi(s);
+return atol(s);
 }
 
 qyINLINE int
 qyos_atoi(const wchar_t*s)
 {
-return (int)::wcstol(s,NULL,10);
+return (int)wcstol(s,NULL,10);
 }
 
 ///
 qyINLINE
 double qyos_atof(const char* s)
 {
-return ::strtod(s,NULL);
+return strtok(s,NULL);
 }
 
 qyINLINE
 double qyos_atof(const wchar_t*s)
 {
-return ::wcstod(s,NULL);
+return wcstod(s,NULL);
 }
 
 qyINLINE
@@ -77,43 +77,43 @@ return 0;
 qyINLINE
 longlong  qyos_strtoll(const char* s, char** end, int base)
 {
-return ::strtoll(s,end,base);
+return strtoll(s,end,base);
 }
 
 qyINLINE
 ulonglong  qyos_strtoull(const char* s, char** end, int base)
 {
-return ::strtoull(s,end,base);
+return strtoull(s,end,base);
 }
 
 qyINLINE
 longlong  qyos_strtoll(const wchar_t* s,wchar_t** end,int base)
 {
-return ::wcstoll(s,end,base);
+return wcstoll(s,end,base);
 }
 
 qyINLINE
 ulonglong  qyos_strtoull(const wchar_t* s,wchar_t** end,int base)
 {
-return ::wcstoull(s,end,base);
+return wcstoull(s,end,base);
 }
 
 qyINLINE char *
 qyos_strcat (char *s, const char *t)
 {
-return ::strcat(s, t);
+return strcat(s, t);
 }
 
 qyINLINE wchar_t *
 qyos_strcat (wchar_t *s, const wchar_t *t)
 {
-return ::wcscat(s, t);
+return wcscat(s, t);
 }
 
 qyINLINE const char *
 qyos_strchr (const char *s, int c)
 {
-return const_cast <const char *> (::strchr (s, c));
+return const_cast <const char *> (strchr (s, c));
 }
 
 
@@ -127,7 +127,7 @@ return wcschr(s,c);
 qyINLINE char *
 qyos_strchr (char *s, int c)
 {
-return ::strchr(s, c);
+return strchr(s, c);
 }
 
 qyINLINE wchar_t *
@@ -139,7 +139,7 @@ return const_cast<wchar_t *> (qyos_strchr (const_cast<const wchar_t *> (s),c));
 qyINLINE int
 qyos_strcmp (const char *s, const char *t)
 {
-return ::strcmp(s, t);
+return strcmp(s, t);
 }
 
 qyINLINE int
@@ -151,7 +151,7 @@ return wcscmp(s,t);
 qyINLINE void
 qyos_strset (char *s, const char t, size_t length)
 {
-::memset(s, t , length);
+memset(s, t , length);
 }
 
 qyINLINE void
@@ -170,7 +170,7 @@ return;
 qyINLINE char *
 qyos_strcpy (char *s, const char *t)
 {
-return ::strcpy(s, t);
+return strcpy(s, t);
 }
 
 qyINLINE wchar_t *
@@ -182,7 +182,7 @@ return wcscpy(s, t);
 qyINLINE size_t
 qyos_strcspn (const char *s, const char *reject)
 {
-return ::strcspn(s, reject);
+return strcspn(s, reject);
 }
 
 qyINLINE size_t
@@ -194,7 +194,7 @@ return wcscspn(s, reject);
 qyINLINE char *
 qyos_strdup (const char *s)
 {
-return ::strdup (s);
+return strdup (s);
 }
 
 qyINLINE wchar_t *
@@ -207,7 +207,7 @@ return wcsdup(s);
 qyINLINE size_t
 qyos_strlen (const char *s)
 {
-return ::strlen(s);
+return strlen(s);
 }
 
 qyINLINE size_t
@@ -219,7 +219,7 @@ return wcslen(s);
 qyINLINE char *
 qyos_strncat (char *s, const char *t, size_t len)
 {
-return ::strncat(s, t, len);
+return strncat(s, t, len);
 
 }
 
@@ -258,7 +258,7 @@ const_cast<wchar_t *> (qyos_strnichr (const_cast<const wchar_t *> (s),c,len));
 qyINLINE int
 qyos_strncmp (const char *s, const char *t, size_t len)
 {
-return ::strncmp(s, t, len);
+return strncmp(s, t, len);
 }
 
 qyINLINE int
@@ -270,7 +270,7 @@ return wcsncmp(s, t, len);
 qyINLINE char *
 qyos_strncpy (char *s, const char *t, size_t len)
 {
-return ::strncpy(s, t, len);
+return strncpy(s, t, len);
 }
 
 qyINLINE wchar_t *
@@ -282,7 +282,7 @@ return wcsncpy(s, t, len);
 qyINLINE size_t
 qyos_strnlen (const char *s, size_t maxlen)
 {
-return ::strnlen(s, maxlen);
+return strnlen(s, maxlen);
 }
 
 qyINLINE size_t
@@ -322,7 +322,7 @@ const_cast<wchar_t *> (qyos_strnistr (static_cast<const wchar_t *> (s), slen, t,
 qyINLINE const char *
 qyos_strpbrk (const char *s1, const char *s2)
 {
-return const_cast <const char *> (::strpbrk (s1, s2));
+return const_cast <const char *> (strpbrk (s1, s2));
 }
 
 qyINLINE const wchar_t *
@@ -334,7 +334,7 @@ return wcspbrk(s, t);
 qyINLINE char *
 qyos_strpbrk (char *s1, const char *s2)
 {
-return ::strpbrk(s1, s2);
+return strpbrk(s1, s2);
 }
 
 qyINLINE wchar_t *
@@ -346,7 +346,7 @@ return const_cast<wchar_t *> (qyos_strpbrk (const_cast<const wchar_t *> (s), t))
 qyINLINE const char *
 qyos_strrchr (const char *s, int c)
 {
-return (const char *) ::strrchr (s, c);
+return (const char *) strrchr (s, c);
 }
 
 qyINLINE const wchar_t *
@@ -358,7 +358,7 @@ return wcsrchr(s, c);
 qyINLINE char *
 qyos_strrchr (char *s, int c)
 {
-return ::strrchr (s, c);
+return strrchr (s, c);
 }
 
 qyINLINE wchar_t *
@@ -370,7 +370,7 @@ return const_cast<wchar_t *> (qyos_strrchr (const_cast<const wchar_t *> (s), c))
 qyINLINE size_t
 qyos_strspn (const char *s, const char *t)
 {
-return ::strspn (s, t);
+return strspn (s, t);
 }
 
 qyINLINE size_t
@@ -383,7 +383,7 @@ return wcsspn(s, t);
 qyINLINE const char *
 qyos_strstr (const char *s, const char *t)
 {
-return (const char *) ::strstr (s, t);
+return (const char *) strstr (s, t);
 }
 
 qyINLINE const wchar_t *
@@ -395,7 +395,7 @@ return wcsstr(s,t);
 qyINLINE char *
 qyos_strstr (char *s, const char *t)
 {
-return ::strstr (s, t);
+return strstr (s, t);
 }
 
 qyINLINE wchar_t *
@@ -408,19 +408,19 @@ return wcsstr(s, t);
 qyINLINE char *
 qyos_strtok (char *s, const char *tokens)
 {
-return ::strtok (s, tokens);
+return strtok (s, tokens);
 }
 
 qyINLINE wchar_t *
 qyos_strtok (wchar_t *s, const wchar_t *tokens)
 {
-return ::wcstok(s, tokens,NULL);
+return wcstok(s, tokens,NULL);
 }
 
 qyINLINE char *
 qyos_strtok_r (char *s, const char *tokens, char **lasts)
 {
-return ::strtok_r(s, tokens, lasts);
+return strtok_r(s, tokens, lasts);
 }
 
 qyINLINE wchar_t*
@@ -432,7 +432,7 @@ return wcstok(s, tokens, lasts);
 qyINLINE int
 qyos_vsnprintf(char * out, size_t l, const char * in, va_list v)
 {
-return ::vsnprintf(out, l,in,v);
+return vsnprintf(out, l,in,v);
 }
 
 qyINLINE int

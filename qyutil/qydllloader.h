@@ -8,16 +8,14 @@ DEFINE_NAMESPACE(qy)
 
 class QYUTIL_API QyDLLLoader
 {
-private:
-
 public:
 	QyDLLLoader()
-		:m_handle(NULL)
+		:handle_(NULL)
 	{	
 	}
 
 	QyDLLLoader(const wchar_t* szDll)
-		:m_handle(NULL)
+		:handle_(NULL)
 	{
 		init(szDll);
 	}
@@ -29,40 +27,39 @@ public:
 
 	int init(const wchar_t* szDll)
 	{
-		SET_PATH(szDll);
-		if (!m_handle)
+		if (!handle_)
 		{
 #if defined(WIN32) || defined(WINCE)
-			m_handle = LoadLibraryW(szDll);
+			handle_ = LoadLibraryW(szDll);
 #else
 
 #endif
-			assert(m_handle);
+			assert(handle_);
 		}
-		return m_handle?0:-1;
+		return handle_?0:-1;
 	}
 
 	int unInit()
 	{
-		if (m_handle)
+		if (handle_)
 		{
 #if defined(WIN32) || defined(WINCE)
 			::FreeLibrary(m_handle);
 #else
 #endif
-			m_handle = NULL;
+			handle_ = NULL;
 		}
 		return 0;
 	}
 
 	QyHMODULE handle() const
 	{
-		return m_handle;
+		return handle_;
 	}
 private:
-	QyHMODULE m_handle;
+	QyHMODULE handle_;
 };
 
 END_NAMESPACE(qy)
 
-#endif //__qy_DLLLOADER_H__
+#endif //__QY_DLLLOADER_H__

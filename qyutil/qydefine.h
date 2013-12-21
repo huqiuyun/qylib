@@ -2,7 +2,7 @@
 #define  __QY_DEFINE_H__
 
 #include <stddef.h>
-#include <qyutil/qyctypes.h>
+#include "qyutil/qyctypes.h"
 /**
  * @author loach
  *
@@ -18,9 +18,9 @@
 #define qyAddRef(p) if (p) (p)->AddRef();
 #endif //qyAddRef
 
-#ifndef qyDeleteM
-#define qyDeleteM(h) if(h) { delete (h); (h)= NULL;}
-#define qyDeleteA(h) if(h) { delete[] (h); (h)= NULL;}
+#ifndef qyDelete2
+#define qyDelete(h)  if(h) { delete (h); (h)= NULL;}
+#define qyDelete2(h) if(h) { delete[] (h); (h)= NULL;}
 #endif //qyDeleteM
 
 
@@ -111,8 +111,8 @@ typedef struct t_qyPOSITION* POSITION_l;
 #include <windows.h>
 #include <tchar.h>
 
-#define qyEXPORT(__type)     __declspec(dllexport) __type
-#define qyIMPORT(__type)     __declspec(dllimport) __type
+#define QY_EXPORT(__type)     __declspec(dllexport) __type
+#define QY_IMPORT(__type)     __declspec(dllimport) __type
 
 // windows path separator char
 #define QY_PATH_SEPARATOR  '\\'
@@ -184,6 +184,8 @@ typedef DWORD near          *PDWORD;
 typedef DWORD far           *LPDWORD;
 typedef void far            *LPVOID;
 typedef CONST void far      *LPCVOID;
+typedef unsigned long       WPARAM;
+typedef unsigned long       LPARAM;
 
 typedef int                  INT;
 typedef unsigned int         UINT;
@@ -263,7 +265,7 @@ typedef HINSTANCE           HMODULE;      /* HMODULEs can be used in place of HI
 for (size_t j = 0; j < len; j++) {     \
 if (path[j] == QY_PATH_SEPARATOR_ERR) {\
 path[j] = QY_PATH_SEPARATOR;           \
-} else if (path[j] == '\0')          {\
+} else if (path[j] == '\0')          { \
 break;                                 \
 }}}
 
@@ -278,6 +280,5 @@ enum QyCaseSensitivity {
     kCaseSensitive = 0,
     kCaseNotSensitive = 1 // Not case sensitive
 };
-
 
 #endif /* __QY_DEFINE_H__*/

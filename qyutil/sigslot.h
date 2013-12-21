@@ -140,7 +140,7 @@ namespace sigslot {
 		{
 			static bool isinitialised = false;
 
-			if (!isinitialised)
+			if(!isinitialised)
 			{
 				InitializeCriticalSection(get_critsec());
 				isinitialised = true;
@@ -553,7 +553,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == pclass)
+				if((*it)->getdest() == pclass)
 				{
 					delete *it;
 					m_connected_slots.erase(it);
@@ -576,7 +576,7 @@ namespace sigslot {
 				typename connections_list::iterator itNext = it;
 				++itNext;
 
-				if ((*it)->getdest() == pslot)
+				if((*it)->getdest() == pslot)
 				{
 					m_connected_slots.erase(it);
 					//			delete *it;
@@ -594,7 +594,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == oldtarget)
+				if((*it)->getdest() == oldtarget)
 				{
 					m_connected_slots.push_back((*it)->duplicate(newtarget));
 				}
@@ -642,7 +642,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == oldtarget)
+				if((*it)->getdest() == oldtarget)
 				{
 					m_connected_slots.push_back((*it)->duplicate(newtarget));
 				}
@@ -699,7 +699,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == pclass)
+				if((*it)->getdest() == pclass)
 				{
 					delete *it;
 					m_connected_slots.erase(it);
@@ -722,7 +722,7 @@ namespace sigslot {
 				typename connections_list::iterator itNext = it;
 				++itNext;
 
-				if ((*it)->getdest() == pslot)
+				if((*it)->getdest() == pslot)
 				{
 					m_connected_slots.erase(it);
 					//			delete *it;
@@ -773,7 +773,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == oldtarget)
+				if((*it)->getdest() == oldtarget)
 				{
 					m_connected_slots.push_back((*it)->duplicate(newtarget));
 				}
@@ -830,7 +830,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == pclass)
+				if((*it)->getdest() == pclass)
 				{
 					delete *it;
 					m_connected_slots.erase(it);
@@ -853,7 +853,7 @@ namespace sigslot {
 				typename connections_list::iterator itNext = it;
 				++itNext;
 
-				if ((*it)->getdest() == pslot)
+				if((*it)->getdest() == pslot)
 				{
 					m_connected_slots.erase(it);
 					//			delete *it;
@@ -903,7 +903,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == oldtarget)
+				if((*it)->getdest() == oldtarget)
 				{
 					m_connected_slots.push_back((*it)->duplicate(newtarget));
 				}
@@ -960,7 +960,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == pclass)
+				if((*it)->getdest() == pclass)
 				{
 					delete *it;
 					m_connected_slots.erase(it);
@@ -983,7 +983,7 @@ namespace sigslot {
 				typename connections_list::iterator itNext = it;
 				++itNext;
 
-				if ((*it)->getdest() == pslot)
+				if((*it)->getdest() == pslot)
 				{
 					m_connected_slots.erase(it);
 					//			delete *it;
@@ -1033,7 +1033,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == oldtarget)
+				if((*it)->getdest() == oldtarget)
 				{
 					m_connected_slots.push_back((*it)->duplicate(newtarget));
 				}
@@ -1090,7 +1090,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == pclass)
+				if((*it)->getdest() == pclass)
 				{
 					delete *it;
 					m_connected_slots.erase(it);
@@ -1113,7 +1113,7 @@ namespace sigslot {
 				typename connections_list::iterator itNext = it;
 				++itNext;
 
-				if ((*it)->getdest() == pslot)
+				if((*it)->getdest() == pslot)
 				{
 					m_connected_slots.erase(it);
 					//			delete *it;
@@ -1165,7 +1165,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == oldtarget)
+				if((*it)->getdest() == oldtarget)
 				{
 					m_connected_slots.push_back((*it)->duplicate(newtarget));
 				}
@@ -1222,7 +1222,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == pclass)
+				if((*it)->getdest() == pclass)
 				{
 					delete *it;
 					m_connected_slots.erase(it);
@@ -1245,7 +1245,7 @@ namespace sigslot {
 				typename connections_list::iterator itNext = it;
 				++itNext;
 
-				if ((*it)->getdest() == pslot)
+				if((*it)->getdest() == pslot)
 				{
 					m_connected_slots.erase(it);
 					//			delete *it;
@@ -1297,7 +1297,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == oldtarget)
+				if((*it)->getdest() == oldtarget)
 				{
 					m_connected_slots.push_back((*it)->duplicate(newtarget));
 				}
@@ -1354,7 +1354,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == pclass)
+				if((*it)->getdest() == pclass)
 				{
 					delete *it;
 					m_connected_slots.erase(it);
@@ -1377,7 +1377,7 @@ namespace sigslot {
 				typename connections_list::iterator itNext = it;
 				++itNext;
 
-				if ((*it)->getdest() == pslot)
+				if((*it)->getdest() == pslot)
 				{
 					m_connected_slots.erase(it);
 					//			delete *it;
@@ -1429,7 +1429,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == oldtarget)
+				if((*it)->getdest() == oldtarget)
 				{
 					m_connected_slots.push_back((*it)->duplicate(newtarget));
 				}
@@ -1486,7 +1486,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == pclass)
+				if((*it)->getdest() == pclass)
 				{
 					delete *it;
 					m_connected_slots.erase(it);
@@ -1509,7 +1509,7 @@ namespace sigslot {
 				typename connections_list::iterator itNext = it;
 				++itNext;
 
-				if ((*it)->getdest() == pslot)
+				if((*it)->getdest() == pslot)
 				{
 					m_connected_slots.erase(it);
 					//			delete *it;
@@ -1562,7 +1562,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == oldtarget)
+				if((*it)->getdest() == oldtarget)
 				{
 					m_connected_slots.push_back((*it)->duplicate(newtarget));
 				}
@@ -1619,7 +1619,7 @@ namespace sigslot {
 
 			while(it != itEnd)
 			{
-				if ((*it)->getdest() == pclass)
+				if((*it)->getdest() == pclass)
 				{
 					delete *it;
 					m_connected_slots.erase(it);
@@ -1642,7 +1642,7 @@ namespace sigslot {
 				typename connections_list::iterator itNext = it;
 				++itNext;
 
-				if ((*it)->getdest() == pslot)
+				if((*it)->getdest() == pslot)
 				{
 					m_connected_slots.erase(it);
 					//			delete *it;

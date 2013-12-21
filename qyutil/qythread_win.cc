@@ -5,7 +5,7 @@
 #include <process.h>
 #include <stdio.h>
 
-BEGIN_QYUTIL_NAMESPACE
+DEFINE_NAMESPACE(qy)
 
 struct THREADNAME_INFO
 {
@@ -44,12 +44,11 @@ public:
     dead_(true),
     do_not_close_handle_(false),
     prio_(prio),
-    event_(NULL),
     thread_(NULL),
     id_(0),
-    name_(),
-    set_thread_name_(false){
+    set_thread_name_(false) {
         
+		name_[0] = '\0';
         if (thread_name != NULL) {
             // Set the thread name to appear in the VS debugger.
             set_thread_name_ = true;
@@ -85,7 +84,6 @@ public:
     unsigned int            id_;
     char                    name_[kThreadMaxNameLength];
     bool                    set_thread_name_;
-    
 };
 
 QyThreadWindow::QyThreadWindow(QyThreadRunFunction func, QyThreadObj obj,
@@ -99,8 +97,8 @@ QyThreadWindow::~QyThreadWindow() {
     delete d_ptr_;
 }
 
-uint32_t QyThread::getThreadId() {
-    return getCurrentThreadId();
+uint32_t QyThread::currentThreadId() {
+	return ::GetCurrentThreadId();
 }
 
 unsigned int WINAPI QyThreadWindow::startThread(LPVOID lp_parameter) {
@@ -114,6 +112,7 @@ bool QyThreadWindow::start() {
         return false;
     }
     if (d->thread_){
+		wakeUp();
         unsigned long dw = WaitForSingleObject(d->thread_, 0);
         if (dw != WAIT_OBJECT_0)
         {
@@ -122,6 +121,7 @@ bool QyThreadWindow::start() {
     }
     d->do_not_close_handle_ = false;
     
+	unsigned int thread_id = 0;
     // Set stack size to 1M
     d->thread_ = (HANDLE)_beginthreadex(NULL, 1024 * 1024, startThread, (void*)this,
                                         0, &thread_id);
@@ -171,17 +171,17 @@ void QyThreadWindow::setNotAlive() {
     QY_D(QyThreadWindow);
     QyAutoLocker cs(&d->critsect_stop_);
     d->alive_ = false;
-    d->thread_hook_.waitUp();
+    d->thread_hook_.wakeUp();
 }
 
-bool QyThreadWindow::stop(int msec) {
+bool QyThreadWindow::stop(unsigned long msec) {
     QY_D(QyThreadWindow);
     d->critsect_stop_.lock();
     
-    // Prevents the handle from being closed in QyThreadWindow::Run()
+    // Prevents the handle from being closed in QyThreadWindow::run()
     d->do_not_close_handle_ = true;
     d->alive_ = false;
-    d->thread_hook_.waitUp();
+    d->thread_hook_.wakeUp();
 
     bool signaled = false;
     if (d->thread_ && !d->dead_) {
@@ -208,11 +208,11 @@ bool QyThreadWindow::stop(int msec) {
     }
 }
 
-void QyThreadWindow::waitUp()
+void QyThreadWindow::wakeUp()
 {
     QY_D(QyThreadWindow);
     d->critsect_stop_.lock();
-    d->thread_hook_.waitup();
+	d->thread_hook_.wakeUp();
     d->critsect_stop_.unlock();
 }
 
@@ -225,7 +225,7 @@ void QyThreadWindow::run() {
     QY_D(QyThreadWindow);
     d->alive_ = true;
     d->dead_ = false;
-    d->event_.waitup();
+	d->event_.wakeUp();
     
     // All tracing must be after event_->Set to avoid deadlock in Trace.
     if (d->set_thread_name_) {
@@ -255,4 +255,4 @@ void QyThreadWindow::run() {
     d->critsect_stop_.unlock();
 };
 
-END_QYUTIL_NAMESPACE
+END_NAMESPACE(qy)

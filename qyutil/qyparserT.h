@@ -42,42 +42,42 @@ public:
 	/**
 	 * @brief 处理数据
 	*/
-	int     Handle(const CharT* value,bool bDefCB = true );
+	int     handle(const CharT* value,bool bDefCB = true );
 	/**
 	 * @brief 需要处理的数据
 	*/
-	int     Handle(const CharT* lpszTxt ,size_t len,bool bDefCB = true );
+	int     handle(const CharT* lpszTxt ,size_t len,bool bDefCB = true );
 	/**
 	 * @brief 处理
 	 * @param pCB 回调函数
 	 * @param cspacing 分隔符号
 	*/
-	int     HandleCB(QyPLineParseCallBackT pCB , CharT cspacing = L',' );
+	int     handleCB(QyPLineParseCallBackT pCB , CharT cspacing = L',' );
 
 	/**
 	 * @brief 有多少参数值 
 	*/
-	size_t  Counts(void) const;
+	size_t  counts(void) const;
 
 	/**
 	* @brief 获取字符类型值
 	* @param nRow 索引值
 	* @param lpszDefault 默认值
 	*/
-	const CharT*  String(size_t nRow , int& len,const CharT *lpszDefault = NULL);
+	const CharT*  string(size_t nRow , int& len,const CharT *lpszDefault = NULL);
 	/**
 	* @brief 获取整数类型值
 	* @param nRow 索引值
 	* @param nDefault 默认值
 	*/
-	int    Int(size_t nRow , int nDefault = 0);
+	int    intValue(size_t nRow , int nDefault = 0);
 
 	/**
 	* @brief 获取双倍浮点数类型值
 	* @param nRow 索引值
 	* @param dDefault 默认值
 	*/
-	double Double(size_t nRow , double dDefault = 0.0);
+	double doubleValue(size_t nRow , double dDefault = 0.0);
 	/**
 	* @brief 值
 	*/
@@ -85,11 +85,11 @@ public:
 	/**
 	 * @brief 长度
 	*/
-	size_t Length(void);
+	size_t length(void);
 	/**
 	 * @brief 清空
 	*/
-    void  Clear();
+    void  clear();
 
 	/*
 	 * @brief 位置点

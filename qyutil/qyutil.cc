@@ -1,14 +1,11 @@
-// Common.cpp : ∂®“Â DLL ”¶”√≥Ã–Úµƒ»Îø⁄µ„°£
-//
-
 #include "stable.h"
 #include "qyconfig.h"
-
+#include <time.h>
 #ifdef _MANAGED
 #pragma managed(push, off)
 #endif
 
-#ifdef COMMON_DLL
+#ifdef QYUTIL_DLL
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved
@@ -27,14 +24,14 @@ DEFINE_NAMESPACE(qy)
 
 BEGIN_EXTERN_C
 
-/** ≥ı ºªØ */
 QYUTIL_API void qyutil_initialize(void)
+{
+}
+
+QYUTIL_API void qyutil_unInitialize(void)
 {
 
 }
-
-/** ∑¥≥ı º */
-QYUTIL_API void qyutil_unInitialize(void){}
 
 END_EXTERN_C
 
