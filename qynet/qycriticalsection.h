@@ -24,28 +24,28 @@ namespace qy
 
 #ifdef H_OS_WIN
 
-	class CriticalSection
+    class QyCriticalSection
 	{
 	public:
-		CriticalSection()
+        QyCriticalSection()
 		{
-			InitializeCriticalSection(&crit_);
+            InitializeCriticalSection(&mCrit);
 			// Windows docs say 0 is not a valid thread id
 			TRACK_OWNER(thread_ = 0);
 		}
-		~CriticalSection() 
+        ~QyCriticalSection()
 		{
-			DeleteCriticalSection(&crit_);
+            DeleteCriticalSection(&mCrit);
 		}
 		void Enter()
 		{
-			EnterCriticalSection(&crit_);
+            EnterCriticalSection(&mCrit);
 			TRACK_OWNER(thread_ = GetCurrentThreadId());
 		}
 		void Leave()
 		{
 			TRACK_OWNER(thread_ = 0);
-			LeaveCriticalSection(&crit_);
+            LeaveCriticalSection(&mCrit);
 		}
 
 #if CS_TRACK_OWNER
@@ -55,51 +55,51 @@ namespace qy
 #endif  // CS_TRACK_OWNER
 
 	private:
-		CRITICAL_SECTION crit_;
+        CRITICAL_SECTION mCrit;
 		TRACK_OWNER(DWORD thread_);  // The section's owning thread id
 	};
 
 #else
-	class CriticalSection
+    class QyCriticalSection
 	{
 	public:
-		CriticalSection() 
+        QyCriticalSection()
 		{
 			pthread_mutexattr_t mutex_attribute;
 			pthread_mutexattr_settype(&mutex_attribute, PTHREAD_MUTEX_RECURSIVE);
-			pthread_mutex_init(&mutex_, &mutex_attribute);
+            pthread_mutex_init(&mMutex, &mutex_attribute);
 		}
-		~CriticalSection() 
+        ~QyCriticalSection()
 		{
-			pthread_mutex_destroy(&mutex_);
+            pthread_mutex_destroy(&mMutex);
 		}
 		void Enter()
 		{
-			pthread_mutex_lock(&mutex_);
+            pthread_mutex_lock(&mMutex);
 		}
 		void Leave() 
 		{
-			pthread_mutex_unlock(&mutex_);
+            pthread_mutex_unlock(&mMutex);
 		}
 	private:
-		pthread_mutex_t mutex_;
+        pthread_mutex_t mMutex;
 	};
 #endif // !H_OS_WIN
 
-	// CritScope, for serializing exection through a scope
-	class CritScope
+    // QyCritScope, for serializing exection through a scope
+    class QyCritScope
 	{
 	public:
-		CritScope(CriticalSection *pcrit)
+        QyCritScope(QyCriticalSection *pcrit)
 		{
-			pcrit_ = pcrit;
-			pcrit_->Enter();
+            mCrit = pcrit;
+            mCrit->Enter();
 		}
-		~CritScope() {
-			pcrit_->Leave();
+        ~QyCritScope() {
+            mCrit->Leave();
 		}
 	private:
-		CriticalSection *pcrit_;
+        QyCriticalSection *mCrit;
 	};
 } // namespace qy 
 

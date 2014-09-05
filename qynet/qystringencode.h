@@ -1,5 +1,5 @@
-#ifndef __STRINGENCODE_H__
-#define __STRINGENCODE_H__
+#ifndef QY_STRINGENCODE_H__
+#define QY_STRINGENCODE_H__
 
 #include <string>
 #include <sstream>
@@ -132,4 +132,4 @@ namespace qy
 
 }  // namespace qy
 
-#endif  // __STRINGENCODE_H__
+#endif  // QY_STRINGENCODE_H__

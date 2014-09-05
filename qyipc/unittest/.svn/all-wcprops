@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/repos/!svn/ver/356119/src/components/education-template/trunk/cpp/src/eduipc/eduipc/unittest
+END
+ipc-test-msg.h
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/repos/!svn/ver/354017/src/components/education-template/trunk/cpp/src/eduipc/eduipc/unittest/ipc-test-msg.h
+END
+ipc-test-plugin.h
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/repos/!svn/ver/356119/src/components/education-template/trunk/cpp/src/eduipc/eduipc/unittest/ipc-test-plugin.h
+END
+ipc-unittest.h
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/repos/!svn/ver/354384/src/components/education-template/trunk/cpp/src/eduipc/eduipc/unittest/ipc-unittest.h
+END

@@ -111,7 +111,7 @@ bool QyMessageQueue::get(QyMessage *msg, unsigned long cmsWait)
 		onSendMessage();
 
 		// Check queues
-		int cmsDelayNext = kForever;
+        uint32 cmsDelayNext = kForever;
 		{
             QyAutoLocker cs(&mCrit);
 
@@ -143,7 +143,7 @@ bool QyMessageQueue::get(QyMessage *msg, unsigned long cmsWait)
         }
 
 		// Which is shorter, the delay wait or the asked wait?
-		int cmsNext;
+        int cmsNext;
 		if (cmsWait == kForever) {
 			cmsNext = cmsDelayNext;
 		}
@@ -152,7 +152,7 @@ bool QyMessageQueue::get(QyMessage *msg, unsigned long cmsWait)
 			if (cmsNext < 0)
 				cmsNext = 0;
 			if (cmsDelayNext != kForever &&
-                cmsDelayNext < cmsNext){
+                cmsDelayNext < (uint32)cmsNext){
 				cmsNext = cmsDelayNext;
             }
 		}

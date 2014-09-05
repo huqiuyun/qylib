@@ -54,64 +54,64 @@ namespace qy
 
     void QySocketAddress::clear()
 	{
-		hostname_.clear();
-		ip_ = 0;
-		port_ = 0;
+        mHostname.clear();
+        mIp = 0;
+        mPort = 0;
 	}
 
     QySocketAddress& QySocketAddress::operator=(const QySocketAddress& addr)
 	{
-		hostname_ = addr.hostname_;
-		ip_ = addr.ip_;
-		port_ = addr.port_;
+        mHostname = addr.mHostname;
+        mIp = addr.mIp;
+        mPort = addr.mPort;
 		return *this;
 	}
 
     void QySocketAddress::setIP(uint32 ip)
 	{
-		hostname_.clear();
-		ip_ = ip;
+        mHostname.clear();
+        mIp = ip;
 	}
 
     bool QySocketAddress::setIP(const std::string& hostname, bool use_dns)
 	{
-		hostname_ = hostname;
-		ip_ = 0;
+        mHostname = hostname;
+        mIp = 0;
         return resolve(true, use_dns);
 	}
 
     void QySocketAddress::setResolvedIP(uint32 ip)
 	{
-		ip_ = ip;
+        mIp = ip;
 	}
 
     void QySocketAddress::setSockPort(int port)
 	{
 		ASSERT((0 <= port) && (port < 65536));
-		port_ = port;
+        mPort = port;
 	}
 
     uint32 QySocketAddress::ip() const
 	{
-		return ip_;
+        return mIp;
 	}
 
     uint16 QySocketAddress::port() const
 	{
-		return port_;
+        return mPort;
 	}
 
     std::string QySocketAddress::ipAsString() const
 	{
-		if (!hostname_.empty())
-			return hostname_;
-        return ipToString(ip_);
+        if (!mHostname.empty())
+            return mHostname;
+        return ipToString(mIp);
 	}
 
     std::string QySocketAddress::portAsString() const
 	{
         std::ostringstream ost;
-		ost << port_;
+        ost << mPort;
 		return ost.str();
 	}
 
@@ -126,35 +126,35 @@ namespace qy
 
     bool QySocketAddress::isAny() const
 	{
-		return (ip_ == 0);
+        return (mIp == 0);
 	}
 
     bool QySocketAddress::isLocalIP() const
 	{
-		return (ip_ >> 24) == 127;
+        return (mIp >> 24) == 127;
 	}
 
     bool QySocketAddress::isPrivateIP() const
 	{
-		return ((ip_ >> 24) == 127) ||
-			((ip_ >> 24) == 10) ||
-			((ip_ >> 20) == ((172 << 4) | 1)) ||
-			((ip_ >> 16) == ((192 << 8) | 168));
+        return ((mIp >> 24) == 127) ||
+            ((mIp >> 24) == 10) ||
+            ((mIp >> 20) == ((172 << 4) | 1)) ||
+            ((mIp >> 16) == ((192 << 8) | 168));
 	}
 
     bool QySocketAddress::isUnresolved() const
 	{
-        return isAny() && !hostname_.empty();
+        return isAny() && !mHostname.empty();
 	}
 
     bool QySocketAddress::resolve(bool force, bool use_dns)
 	{
-		if (hostname_.empty()) {
+        if (mHostname.empty()) {
 			// nothing to resolve
         } else if (!force && !isAny()) {
 			// already resolved
-        } else if (uint32 ip = stringToIP(hostname_, use_dns)) {
-			ip_ = ip;
+        } else if (uint32 ip = stringToIP(mHostname, use_dns)) {
+            mIp = ip;
 		} else {
 			return false;
 		}
@@ -168,43 +168,43 @@ namespace qy
 
     bool QySocketAddress::operator <(const QySocketAddress& addr) const
 	{
-		if (ip_ < addr.ip_)
+        if (mIp < addr.mIp)
 			return true;
-		else if (addr.ip_ < ip_)
+        else if (addr.mIp < mIp)
 			return false;
 
 		// We only check hostnames if both IPs are zero.  This matches EqualIPs()
-		if (addr.ip_ == 0) {
-			if (hostname_ < addr.hostname_)
+        if (addr.mIp == 0) {
+            if (mHostname < addr.mHostname)
 				return true;
-			else if (addr.hostname_ < hostname_)
+            else if (addr.mHostname < mHostname)
 				return false;
 		}
 
-		return port_ < addr.port_;
+        return mPort < addr.mPort;
 	}
 
     bool QySocketAddress::equalIPs(const QySocketAddress& addr) const
 	{
-		return (ip_ == addr.ip_) && ((ip_ != 0) || (hostname_ == addr.hostname_));
+        return (mIp == addr.mIp) && ((mIp != 0) || (mHostname == addr.mHostname));
 	}
 
     bool QySocketAddress::equalPorts(const QySocketAddress& addr) const
 	{
-		return (port_ == addr.port_);
+        return (mPort == addr.mPort);
 	}
 
     size_t QySocketAddress::hash() const
 	{
 		size_t h = 0;
-		h ^= ip_;
-		h ^= port_ | (port_ << 16);
+        h ^= mIp;
+        h ^= mPort | (mPort << 16);
 		return h;
 	}
 
     size_t QySocketAddress::size() const
 	{
-		return sizeof(ip_) + sizeof(port_);
+        return sizeof(mIp) + sizeof(mPort);
 	}
 
     void QySocketAddress::write(char* buf, int len) const
@@ -212,29 +212,29 @@ namespace qy
 		// TODO: Depending on how this is used, we may want/need to write hostname
         HUNUSED(len);
 		ASSERT((size_t)len >= Size_());
-		reinterpret_cast<uint32*>(buf)[0] = ip_;
-		buf += sizeof(ip_);
-		reinterpret_cast<uint16*>(buf)[0] = port_;
+        reinterpret_cast<uint32*>(buf)[0] = mIp;
+        buf += sizeof(mIp);
+        reinterpret_cast<uint16*>(buf)[0] = mPort;
 	}
 
     void QySocketAddress::read(const char* buf, int len)
 	{
         HUNUSED(len);
 		ASSERT((size_t)len >= Size_());
-		ip_ = reinterpret_cast<const uint32*>(buf)[0];
-		buf += sizeof(ip_);
-		port_ = reinterpret_cast<const uint16*>(buf)[0];
+        mIp = reinterpret_cast<const uint32*>(buf)[0];
+        buf += sizeof(mIp);
+        mPort = reinterpret_cast<const uint16*>(buf)[0];
 	}
 
     void QySocketAddress::toSockAddr(sockaddr_in* saddr) const
 	{
 		memset(saddr, 0, sizeof(*saddr));
 		saddr->sin_family = AF_INET;
-		saddr->sin_port = HostToNetwork16(port_);
-		if (0 == ip_) {
+        saddr->sin_port = HostToNetwork16(mPort);
+        if (0 == mIp) {
 			saddr->sin_addr.s_addr = INADDR_ANY;
 		} else {
-			saddr->sin_addr.s_addr = HostToNetwork32(ip_);
+            saddr->sin_addr.s_addr = HostToNetwork32(mIp);
 		}
 	}
 

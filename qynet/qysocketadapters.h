@@ -28,9 +28,9 @@ namespace qy
         virtual void onReadEvent(QyAsyncSocket * socket);
 
 	private:
-		char * buffer_;
-		size_t buffer_size_, data_len_;
-		bool buffering_;
+        char * mBuffer;
+        size_t mBufferSize, mDataLen;
+        bool mBuffering;
 	};
 
     class QyAsyncSSLSocket : public QyBufferedReadAdapter
@@ -45,10 +45,11 @@ namespace qy
         virtual void processInput(char * data, size_t& len);
 	};
 
-    class QyAsyncSocksProxySocket : public QyBufferedReadAdapter
+    //SOCKET 5 proxy
+    class QyAsyncProxySocket : public QyBufferedReadAdapter
 	{
 	public:
-        QyAsyncSocksProxySocket(QyAsyncSocket* socket, const QySocketAddress& proxy,
+        QyAsyncProxySocket(QyAsyncSocket* socket, const QySocketAddress& proxy,
             const std::string& username, const QyCryptString& password);
 
         virtual int connect(const QySocketAddress& addr);
@@ -64,10 +65,10 @@ namespace qy
         void setError(int error);
 
 	private:
-        QySocketAddress proxy_, dest_;
-		std::string user_;
-        QyCryptString pass_;
-		enum SocksState { SS_HELLO, SS_AUTH, SS_CONNECT, SS_TUNNEL, SS_ERROR } state_;
+        QySocketAddress mProxy, mDest;
+        std::string mUser;
+        QyCryptString mPassword;
+        enum ProxyState { SS_HELLO, SS_AUTH, SS_CONNECT, SS_TUNNEL, SS_ERROR } mProxyState;
 	};
 
 } // namespace qy

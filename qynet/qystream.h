@@ -123,47 +123,47 @@ namespace qy
 		}
 
         virtual StreamState state() const {
-            return stream_->state();
+            return mStream->state();
 		}
         virtual StreamResult read(void* buffer, size_t buffer_len,size_t* read, int* error)
 		{
-            return stream_->read(buffer, buffer_len, read, error);
+            return mStream->read(buffer, buffer_len, read, error);
 		}
         virtual StreamResult write(const void* data, size_t data_len,size_t* written, int* error)
 		{
-            return stream_->write(data, data_len, written, error);
+            return mStream->write(data, data_len, written, error);
 		}
         virtual void close()
 		{
-            stream_->close();
+            mStream->close();
 		}
         virtual bool size(size_t* size) const
 		{
-            return stream_->size(size);
+            return mStream->size(size);
 		}
         virtual bool reserveSize(size_t size)
 		{
-            return stream_->reserveSize(size);
+            return mStream->reserveSize(size);
 		}
         virtual bool rewind()
 		{
-            return stream_->rewind();
+            return mStream->rewind();
 		}
 
         void attach(QyStreamInterface* stream)
 		{
-			if (NULL != stream_.get())
-                stream_->sigEvent.disconnect(this);
-			stream_.reset(stream);
-			if (NULL != stream_.get())
-                stream_->sigEvent.connect(this, &QyStreamAdapterInterface::onEvent);
+            if (NULL != mStream.get())
+                mStream->sigEvent.disconnect(this);
+            mStream.reset(stream);
+            if (NULL != mStream.get())
+                mStream->sigEvent.connect(this, &QyStreamAdapterInterface::onEvent);
 		}
         QyStreamInterface* detach()
 		{ 
-			if (NULL == stream_.get())
+            if (NULL == mStream.get())
 				return NULL;
-            stream_->sigEvent.disconnect(this);
-			return stream_.release();
+            mStream->sigEvent.disconnect(this);
+            return mStream.release();
 		}
 
 	protected:
@@ -176,7 +176,7 @@ namespace qy
 		}
 
 	private:
-        scoped_ptr<QyStreamInterface> stream_;
+        scoped_ptr<QyStreamInterface> mStream;
         DISALLOW_EVIL_CONSTRUCTORS(QyStreamAdapterInterface);
 	};
 
@@ -202,9 +202,9 @@ namespace qy
 			size_t* written, int* error);
 
 	private:
-        scoped_ptr<QyStreamInterface> tap_;
-		StreamResult tap_result_;
-		int tap_error_;
+        scoped_ptr<QyStreamInterface> mTap;
+        StreamResult mTapResult;
+        int mTapError;
         DISALLOW_EVIL_CONSTRUCTORS(QyStreamTap);
 	};
 
@@ -263,7 +263,7 @@ namespace qy
         static bool size(const std::string& filename, size_t* size);
 
 	private:
-		FILE* file_;
+        FILE* mFile;
         DISALLOW_EVIL_CONSTRUCTORS(QyFileStream);
 	};
 
@@ -289,18 +289,18 @@ namespace qy
         virtual bool reserveSize(size_t size);
         virtual bool rewind() { return setPosition(0); }
 
-        char* getBuffer() { return buffer_; }
-        const char* getBuffer() const { return buffer_; }
+        char* getBuffer() { return mBuffer; }
+        const char* getBuffer() const { return mBuffer; }
         bool setPosition(size_t position);
         bool getPosition(size_t* position) const;
 
 	private:
         void setContents(const char* data, size_t length);
 
-		size_t   allocated_length_;
-		char*    buffer_;
-		size_t   data_length_;
-		size_t   seek_position_;
+        size_t   mAllocatedLength;
+        char*    mBuffer;
+        size_t   mDataLength;
+        size_t   mSeekPosition;
 
 	private:
         DISALLOW_EVIL_CONSTRUCTORS(QyMemoryStream);
@@ -327,9 +327,9 @@ namespace qy
         virtual bool rewind();
 
 	private:
-		std::string& str_;
-        size_t read_pos_;
-        bool read_only_;
+        std::string& mString;
+        size_t mReadPos;
+        bool mReadOnly;
 	};
 
 	///////////////////////////////////////////////////////////////////////////////

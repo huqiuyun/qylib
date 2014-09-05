@@ -35,8 +35,8 @@ namespace qy
         void onCloseEvent(QyAsyncSocket* socket, int error);
 
     private:
-        char* inbuf_, * outbuf_;
-        size_t insize_, inpos_, outsize_, outpos_;
+        char* mInBuf, * mOutBuf;
+        size_t mInSize, mInpos, mOutSize, mOutpos;
 	};
 
 } // namespace qy

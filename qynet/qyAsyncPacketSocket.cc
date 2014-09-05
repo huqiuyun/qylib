@@ -1,63 +1,69 @@
-#include "qyAsyncPacketSocket.h"
+﻿#include "qyAsyncPacketSocket.h"
 
 namespace qy 
 {
-    QyAsyncPacketSocket::QyAsyncPacketSocket(QyAsyncSocket* socket) : socket_(socket)
+    QyAsyncPacketSocket::QyAsyncPacketSocket(QyAsyncSocket* s) :
+        mSocket(s)
 	{
 	}
 
     QyAsyncPacketSocket::~QyAsyncPacketSocket() {
-		delete socket_;
+        delete mSocket;
 	}
+
+    SOCKET QyAsyncPacketSocket::socket() const
+    {
+        return mSocket->socket();
+    }
 
     QySocketAddress QyAsyncPacketSocket::localAddress() const
 	{
-        return socket_->localAddress();
+        return mSocket->localAddress();
 	}
 
     QySocketAddress QyAsyncPacketSocket::remoteAddress() const
 	{
-        return socket_->remoteAddress();
+        return mSocket->remoteAddress();
 	}
 
     int QyAsyncPacketSocket::bind(const QySocketAddress& addr)
 	{
-        return socket_->bind(addr);
+        return mSocket->bind(addr);
 	}
 
     int QyAsyncPacketSocket::connect(const QySocketAddress& addr)
 	{
-        return socket_->connect(addr);
+        return mSocket->connect(addr);
 	}
 
     int QyAsyncPacketSocket::send(const void *pv, size_t cb)
 	{
-        return socket_->send(pv, cb);
+        return mSocket->send(pv, cb);
 	}
 
     int QyAsyncPacketSocket::sendTo(const void *pv, size_t cb, const QySocketAddress& addr)
 	{
-            return socket_->sendTo(pv, cb, addr);
+            return mSocket->sendTo(pv, cb, addr);
 	}
 
     int QyAsyncPacketSocket::close()
 	{
-        return socket_->close();
+        return mSocket->close();
 	}
 
-    int QyAsyncPacketSocket::setOption(QySocket::Option opt, int value)
+    int QyAsyncPacketSocket::setOption(int opt, int optflag, const void *value, size_t valLen)
 	{
-        return socket_->setOption(opt, value);
+        return mSocket->setOption(opt,optflag,value,valLen);
 	}
 
     int QyAsyncPacketSocket::error() const
 	{
-        return socket_->error();
+        return mSocket->error();
 	}
 
     void QyAsyncPacketSocket::setError(int error)
 	{
-        return socket_->setError(error);
+        return mSocket->setError(error);
 	}
 
 } // namespace qy

@@ -77,28 +77,28 @@ namespace qy
 	///////////////////////////////////////////////////////////////////////////////
 
     QyStreamTap::QyStreamTap(QyStreamInterface* stream, QyStreamInterface* tap)
-        : QyStreamAdapterInterface(stream), tap_(NULL), tap_result_(SR_SUCCESS),
-		tap_error_(0)
+        : QyStreamAdapterInterface(stream), mTap(NULL), mTapResult(SR_SUCCESS),
+        mTapError(0)
 	{
 		AttachTap(tap);
 	}
 
     void QyStreamTap::AttachTap(QyStreamInterface* tap)
 	{
-		tap_.reset(tap);
+        mTap.reset(tap);
 	}
 
     QyStreamInterface* QyStreamTap::DetachTap()
 	{ 
-		return tap_.release();
+        return mTap.release();
 	}
 
     StreamResult QyStreamTap::GetTapResult(int* error)
 	{
 		if (error) {
-			*error = tap_error_;
+            *error = mTapError;
 		}
-		return tap_result_;
+        return mTapResult;
 	}
 
     StreamResult QyStreamTap::read(void* buffer, size_t buffer_len,
@@ -110,8 +110,8 @@ namespace qy
 		}
         StreamResult res = QyStreamAdapterInterface::read(buffer, buffer_len,
             read, error);
-		if ((res == SR_SUCCESS) && (tap_result_ == SR_SUCCESS)) {
-            tap_result_ = tap_->writeAll(buffer, *read, NULL, &tap_error_);
+        if ((res == SR_SUCCESS) && (mTapResult == SR_SUCCESS)) {
+            mTapResult = mTap->writeAll(buffer, *read, NULL, &mTapError);
 		}
 		return res;
 	}
@@ -125,8 +125,8 @@ namespace qy
 		}
         StreamResult res = QyStreamAdapterInterface::write(data, data_len,
 			written, error);
-		if ((res == SR_SUCCESS) && (tap_result_ == SR_SUCCESS)) {
-            tap_result_ = tap_->writeAll(data, *written, NULL, &tap_error_);
+        if ((res == SR_SUCCESS) && (mTapResult == SR_SUCCESS)) {
+            mTapResult = mTap->writeAll(data, *written, NULL, &mTapError);
 		}
 		return res;
 	}
@@ -182,7 +182,7 @@ namespace qy
     // QyFileStream
 	///////////////////////////////////////////////////////////////////////////////
 
-    QyFileStream::QyFileStream() : file_(NULL)
+    QyFileStream::QyFileStream() : mFile(NULL)
 	{
 	}
 
@@ -197,9 +197,9 @@ namespace qy
 #ifdef H_OS_WIN
 
 #else
-        file_ = fopen(filename.c_str(), mode);
+        mFile = fopen(filename.c_str(), mode);
 #endif
-		return (file_ != NULL);
+        return (mFile != NULL);
 	}
 
     bool QyFileStream::openShare(const std::string& filename, const char* mode,int shflag)
@@ -211,29 +211,29 @@ namespace qy
 #else
         return open(filename, mode);
 #endif
-		return (file_ != NULL);
+        return (mFile != NULL);
 	}
 
     bool QyFileStream::disableBuffering()
 	{
-		if (!file_)
+        if (!mFile)
 			return false;
-		return (setvbuf(file_, NULL, _IONBF, 0) == 0);
+        return (setvbuf(mFile, NULL, _IONBF, 0) == 0);
 	}
 
     StreamState QyFileStream::state() const
 	{
-        return (file_ == NULL) ? SS_CLOSED : SS_OPEN;
+        return (mFile == NULL) ? SS_CLOSED : SS_OPEN;
 	}
 
     StreamResult QyFileStream::read(void* buffer, size_t buffer_len,
         size_t* read, int* error)
 	{
-		if (!file_)
+        if (!mFile)
 			return SR_EOS;
-        size_t result = fread(buffer, 1, buffer_len, file_);
+        size_t result = fread(buffer, 1, buffer_len, mFile);
 		if ((result == 0) && (buffer_len > 0)) {
-			if (feof(file_))
+            if (feof(mFile))
 				return SR_EOS;
 			if (error)
 				*error = errno;
@@ -247,9 +247,9 @@ namespace qy
     StreamResult QyFileStream::write(const void* data, size_t data_len,
 		size_t* written, int* error)
 	{
-		if (!file_)
+        if (!mFile)
 			return SR_EOS;
-        size_t result = fwrite(data, 1, data_len, file_);
+        size_t result = fwrite(data, 1, data_len, mFile);
 		if ((result == 0) && (data_len > 0)) {
 			if (error)
 				*error = errno;
@@ -262,25 +262,25 @@ namespace qy
 
     void QyFileStream::close()
 	{
-		if (file_) {
-            fclose(file_);
-			file_ = NULL;
+        if (mFile) {
+            fclose(mFile);
+            mFile = NULL;
 		}
 	}
 
     bool QyFileStream::setPosition(size_t position)
 	{
-		if (!file_)
+        if (!mFile)
 			return false;
-		return (fseek(file_, position, SEEK_SET) == 0);
+        return (fseek(mFile, position, SEEK_SET) == 0);
 	}
 
     bool QyFileStream::getPosition(size_t * position) const
 	{
 		ASSERT(position != NULL);
-		if (!file_ || !position)
+        if (!mFile || !position)
 			return false;
-		long result = ftell(file_);
+        long result = ftell(mFile);
 		if (result < 0)
 			return false;
 		*position = result;
@@ -290,10 +290,10 @@ namespace qy
     bool QyFileStream::size(size_t * size) const
 	{
 		ASSERT(size != NULL);
-		if (!file_ || !size)
+        if (!mFile || !size)
 			return false;
 		struct stat file_stats;
-		if (fstat(fileno(file_), &file_stats) != 0)
+        if (fstat(fileno(mFile), &file_stats) != 0)
 			return false;
 		*size = file_stats.st_size;
 		return true;
@@ -317,9 +317,9 @@ namespace qy
 
     int QyFileStream::flush()
 	{
-		if (file_)
+        if (mFile)
 		{
-            return fflush (file_);
+            return fflush (mFile);
 		}
         // try to flush empty file?
 		ASSERT(false);
@@ -329,32 +329,32 @@ namespace qy
 
 
     QyMemoryStream::QyMemoryStream()
-		: allocated_length_(0), buffer_(NULL), data_length_(0), seek_position_(0)
+        : mAllocatedLength(0), mBuffer(NULL), mDataLength(0), mSeekPosition(0)
 	{
 	}
 
     QyMemoryStream::QyMemoryStream(const char* data)
-		: allocated_length_(0), buffer_(NULL), data_length_(0), seek_position_(0)
+        : mAllocatedLength(0), mBuffer(NULL), mDataLength(0), mSeekPosition(0)
 	{
         setContents(data, strlen(data));
 	}
 
     QyMemoryStream::QyMemoryStream(const char* data, size_t length)
-		: allocated_length_(0), buffer_(NULL), data_length_(0), seek_position_(0)
+        : mAllocatedLength(0), mBuffer(NULL), mDataLength(0), mSeekPosition(0)
 	{
         setContents(data, length);
 	}
 
     QyMemoryStream::~QyMemoryStream() {
-		delete [] buffer_;
+        delete [] mBuffer;
 	}
 
     void QyMemoryStream::setContents(const char* data, size_t length)
 	{ 
-		delete [] buffer_;
-		data_length_ = allocated_length_ = length;
-		buffer_ = new char[allocated_length_];
-		memcpy(buffer_, data, data_length_);
+        delete [] mBuffer;
+        mDataLength = mAllocatedLength = length;
+        mBuffer = new char[mAllocatedLength];
+        memcpy(mBuffer, data, mDataLength);
 	}
 
     StreamState QyMemoryStream::state() const
@@ -365,7 +365,7 @@ namespace qy
     StreamResult QyMemoryStream::read(void *buffer, size_t bytes,
         size_t *bytes_read, int *error)
 	{
-		if (seek_position_ >= data_length_) {
+        if (mSeekPosition >= mDataLength) {
 			// At end of stream
 			if (error) {
 				*error = EOF;
@@ -373,13 +373,13 @@ namespace qy
 			return SR_EOS;
 		}
 
-		size_t remaining_length = data_length_ - seek_position_;
+        size_t remaining_length = mDataLength - mSeekPosition;
 		if (bytes > remaining_length) {
             // read partial buffer
 			bytes = remaining_length;
 		}
-		memcpy(buffer, &buffer_[seek_position_], bytes);
-		seek_position_ += bytes;
+        memcpy(buffer, &mBuffer[mSeekPosition], bytes);
+        mSeekPosition += bytes;
         if (bytes_read) {
             *bytes_read = bytes;
 		}
@@ -393,18 +393,18 @@ namespace qy
 		int error_value = 0;
 		size_t bytes_written_value = 0;
 
-		size_t new_position = seek_position_ + bytes;
-		if (new_position > allocated_length_) {
+        size_t new_position = mSeekPosition + bytes;
+        if (new_position > mAllocatedLength) {
 			// Increase buffer size to the larger of:
 			// a) new position rounded up to next 256 bytes
 			// b) double the previous length
 			size_t new_allocated_length = _max((new_position | 0xFF) + 1,
-				allocated_length_ * 2);
+                mAllocatedLength * 2);
 			if (char* new_buffer = new char[new_allocated_length]) {
-				memcpy(new_buffer, buffer_, data_length_);
-				delete [] buffer_;
-				buffer_ = new_buffer;
-				allocated_length_ = new_allocated_length;
+                memcpy(new_buffer, mBuffer, mDataLength);
+                delete [] mBuffer;
+                mBuffer = new_buffer;
+                mAllocatedLength = new_allocated_length;
 			} else {
 				error_value = ENOMEM;
 				sr = SR_ERROR;
@@ -413,10 +413,10 @@ namespace qy
 
 		if (sr == SR_SUCCESS) {
 			bytes_written_value = bytes;
-			memcpy(&buffer_[seek_position_], buffer, bytes);
-			seek_position_ = new_position;
-			if (data_length_ < seek_position_) {
-				data_length_ = seek_position_;
+            memcpy(&mBuffer[mSeekPosition], buffer, bytes);
+            mSeekPosition = new_position;
+            if (mDataLength < mSeekPosition) {
+                mDataLength = mSeekPosition;
 			}
 		}
 
@@ -437,8 +437,8 @@ namespace qy
 
     bool QyMemoryStream::setPosition(size_t position)
 	{
-		if (position <= data_length_) {
-			seek_position_ = position;
+        if (position <= mDataLength) {
+            mSeekPosition = position;
 			return true;
 		}
 		return false;
@@ -449,7 +449,7 @@ namespace qy
 		if (!position) {
 			return false;
 		}
-		*position = seek_position_;
+        *position = mSeekPosition;
 		return true;
 	}
 
@@ -458,20 +458,20 @@ namespace qy
 		if (!size) {
 			return false;
 		}
-		*size = data_length_;
+        *size = mDataLength;
 		return true;
 	}
 
     bool QyMemoryStream::reserveSize(size_t size)
 	{
-		if (allocated_length_ >= size)
+        if (mAllocatedLength >= size)
 			return true;
 
 		if (char* new_buffer = new char[size]) {
-			memcpy(new_buffer, buffer_, data_length_);
-			delete [] buffer_;
-			buffer_ = new_buffer;
-			allocated_length_ = size;
+            memcpy(new_buffer, mBuffer, mDataLength);
+            delete [] mBuffer;
+            mBuffer = new_buffer;
+            mAllocatedLength = size;
 			return true;
 		}
 
@@ -525,12 +525,12 @@ namespace qy
 	///////////////////////////////////////////////////////////////////////////////
 
     QyStringStream::QyStringStream(std::string& str)
-        : str_(str), read_pos_(0), read_only_(false)
+        : mString(str), mReadPos(0), mReadOnly(false)
 	{
 	}
 
     QyStringStream::QyStringStream(const std::string& str)
-        : str_(const_cast<std::string&>(str)), read_pos_(0), read_only_(true)
+        : mString(const_cast<std::string&>(str)), mReadPos(0), mReadOnly(true)
 	{
 	}
 
@@ -543,11 +543,11 @@ namespace qy
         size_t* read, int* error)
 	{
         HUNUSED(error);
-        size_t available = _min(buffer_len, str_.size() - read_pos_);
+        size_t available = _min(buffer_len, mString.size() - mReadPos);
 		if (!available)
 			return SR_EOS;
-        memcpy(buffer, str_.data() + read_pos_, available);
-        read_pos_ += available;
+        memcpy(buffer, mString.data() + mReadPos, available);
+        mReadPos += available;
         if (read)
             *read = available;
 		return SR_SUCCESS;
@@ -556,13 +556,13 @@ namespace qy
     StreamResult QyStringStream::write(const void* data, size_t data_len,
 		size_t* written, int* error)
 	{
-        if (read_only_) {
+        if (mReadOnly) {
 			if (error) {
 				*error = -1;
 			}
 			return SR_ERROR;
 		}
-		str_.append(static_cast<const char*>(data),
+        mString.append(static_cast<const char*>(data),
 			static_cast<const char*>(data) + data_len);
 		if (written)
 			*written = data_len;
@@ -576,21 +576,21 @@ namespace qy
     bool QyStringStream::size(size_t* size) const
 	{
 		ASSERT(size != NULL);
-		*size = str_.size();
+        *size = mString.size();
 		return true;
 	}
 
     bool QyStringStream::reserveSize(size_t size)
 	{
-        if (read_only_)
+        if (mReadOnly)
 			return false;
-		str_.reserve(size);
+        mString.reserve(size);
 		return true;
 	}
 
     bool QyStringStream::rewind()
 	{
-        read_pos_ = 0;
+        mReadPos = 0;
 		return true;
 	}
 } // namespace qy

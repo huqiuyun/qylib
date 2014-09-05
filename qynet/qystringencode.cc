@@ -127,10 +127,10 @@ namespace qy
 	{
 		// It might be better to have a single specification which is the union of
 		// all operating systems, unless one system is overly restrictive.
-#ifdef WIN32
+#ifdef H_OS_WIN
 		return "\\/:*?\"<>|";
 #else  // !WIN32
-		// TODO
+        return ":";
 #endif  // !WIN23
 	}
 

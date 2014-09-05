@@ -5,24 +5,28 @@
 
 namespace qy {
 
-class QyPhysicalSocketFactory;
-class PhysicalSocketPrivate;
-class PhysicalSocket : public QyAsyncSocket
+class QyPhysicalSocketPrivate;
+class QyPhysicalSocket : public QyAsyncSocket
 {
 public:
-    PhysicalSocket(QyPhysicalSocketFactory* factory, SOCKET s = INVALID_SOCKET);
-    virtual ~PhysicalSocket();
+    QyPhysicalSocket(SOCKET s = INVALID_SOCKET);
+    virtual ~QyPhysicalSocket();
 
+    SOCKET socket() const;
     QySocketAddress localAddress() const;
     QySocketAddress remoteAddress() const;
+
+    int  error() const;
+    void setError(int error);
+    ConnState connState() const;
+    void setConnState(ConnState s);
+    uint32 enabledEvent() const;
+    void setEnabledEvent(uint32 e);
 
     bool open(int type);
     int  bind(const QySocketAddress& addr);
     int  connect(const QySocketAddress& addr);
-    int  error() const;
-    void setError(int error);
-    ConnState state() const;
-    int  setOption(Option opt, int value);
+    int  setOption(int opt, int optflag, const void *value, size_t valLen);
 
     int  send(const void *pv, size_t cb);
     int  sendTo(const void *pv, size_t cb, const QySocketAddress& addr);
@@ -32,12 +36,11 @@ public:
     int  close();
     int  estimateMTU(uint16* mtu);
 
-    QyPhysicalSocketFactory* factory() const;
 protected:
     void updateLastError();
 
 private:
-    PhysicalSocketPrivate* d_ptr;
+    QyPhysicalSocketPrivate* d_ptr;
 };
 
 } // namespace qy

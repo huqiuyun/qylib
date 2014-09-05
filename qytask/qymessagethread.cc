@@ -18,8 +18,6 @@ struct qy_sendmessage_t
 };
 typedef std::list<qy_sendmessage_t> SENDMSGS;
 
-const unsigned int MSDEV_SET_mThreadNAME = 0x406D1388;
-
 class QyMessageThreadManagerPrivate
 {
 public:
@@ -104,7 +102,6 @@ public:
 private:
     QySmartLock<HQyEvent,QyManualEvent> mEvent;
 };
-
 
 class QyAutoThread : public QyMessageThread
 {

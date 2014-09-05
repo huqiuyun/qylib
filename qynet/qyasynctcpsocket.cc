@@ -14,47 +14,47 @@ namespace qy
 
     AsyncTCPSocket::AsyncTCPSocket(QyAsyncSocket* socket)
         : QyAsyncPacketSocket(socket)
-		, insize_(BUF_SIZE)
-		, inpos_(0)
-		, outsize_(BUF_SIZE)
-		, outpos_(0)
+        , mInSize(BUF_SIZE)
+        , mInpos(0)
+        , mOutSize(BUF_SIZE)
+        , mOutpos(0)
 	{
-		inbuf_ = new char[insize_];
-		outbuf_ = new char[outsize_];
+        mInBuf = new char[mInSize];
+        mOutBuf = new char[mOutSize];
 
-		ASSERT(socket_ != NULL);
-        socket_->sigConnectEvent.connect(this, &AsyncTCPSocket::onConnectEvent);
-        socket_->sigReadEvent.connect(this, &AsyncTCPSocket::onReadEvent);
-        socket_->sigWriteEvent.connect(this, &AsyncTCPSocket::onWriteEvent);
-        socket_->sigCloseEvent.connect(this, &AsyncTCPSocket::onCloseEvent);
+        ASSERT(mSocket != NULL);
+        mSocket->sigConnectEvent.connect(this, &AsyncTCPSocket::onConnectEvent);
+        mSocket->sigReadEvent.connect(this, &AsyncTCPSocket::onReadEvent);
+        mSocket->sigWriteEvent.connect(this, &AsyncTCPSocket::onWriteEvent);
+        mSocket->sigCloseEvent.connect(this, &AsyncTCPSocket::onCloseEvent);
 	}
 
 	AsyncTCPSocket::~AsyncTCPSocket()
 	{
-		delete [] inbuf_;
-		delete [] outbuf_;
+        delete [] mInBuf;
+        delete [] mOutBuf;
 	}
 
     int AsyncTCPSocket::send(const void *pv, size_t cb)
 	{
 		if (cb > MAX_PACKET_SIZE) {
-            socket_->setError(EMSGSIZE);
+            mSocket->setError(EMSGSIZE);
 			return -1;
 		}
 
 		// If we are blocking on send, then silently drop this packet
-		if (outpos_)
+        if (mOutpos)
 			return static_cast<int>(cb);
 
 		PacketLength pkt_len = HostToNetwork16(static_cast<PacketLength>(cb));
-		memcpy(outbuf_, &pkt_len, PKT_LEN_SIZE);
-		memcpy(outbuf_ + PKT_LEN_SIZE, pv, cb);
-		outpos_ = PKT_LEN_SIZE + cb;
+        memcpy(mOutBuf, &pkt_len, PKT_LEN_SIZE);
+        memcpy(mOutBuf + PKT_LEN_SIZE, pv, cb);
+        mOutpos = PKT_LEN_SIZE + cb;
 
         int res = flush();
 		if (res <= 0) {
 			// drop packet if we made no progress
-			outpos_ = 0; 
+            mOutpos = 0;
 			return res;
 		}
 
@@ -68,19 +68,19 @@ namespace qy
             return send(pv, cb);
 
 		ASSERT(false);
-        socket_->setError(ENOTCONN);
+        mSocket->setError(ENOTCONN);
 		return -1;
 	}
 
     int AsyncTCPSocket::sendRaw(const void * pv, size_t cb)
 	{
-		if (outpos_ + cb > outsize_) {
-            socket_->setError(EMSGSIZE);
+        if (mOutpos + cb > mOutSize) {
+            mSocket->setError(EMSGSIZE);
 			return -1;
 		}
 
-		memcpy(outbuf_ + outpos_, pv, cb);
-		outpos_ += cb;
+        memcpy(mOutBuf + mOutpos, pv, cb);
+        mOutpos += cb;
 
         return flush();
 	}
@@ -111,18 +111,18 @@ namespace qy
 
     int AsyncTCPSocket::flush()
 	{
-        int res = socket_->send(outbuf_, outpos_);
+        int res = mSocket->send(mOutBuf, mOutpos);
 		if (res <= 0) {
 			return res;
 		}
-		if (static_cast<size_t>(res) <= outpos_) {
-			outpos_ -= res;
+        if (static_cast<size_t>(res) <= mOutpos) {
+            mOutpos -= res;
 		} else {
 			ASSERT(false);
 			return -1;
 		}
-		if (outpos_ > 0) {
-			memmove(outbuf_, outbuf_ + res, outpos_);
+        if (mOutpos > 0) {
+            memmove(mOutBuf, mOutBuf + res, mOutpos);
 		}
 		return res;
 	}
@@ -136,32 +136,32 @@ namespace qy
     void AsyncTCPSocket::onReadEvent(QyAsyncSocket* socket)
 	{
         HUNUSED(socket);
-		ASSERT(socket == socket_);
+        ASSERT(socket == mSocket);
 
-        int len = socket_->recv(inbuf_ + inpos_, insize_ - inpos_);
+        int len = mSocket->recv(mInBuf + mInpos, mInSize - mInpos);
 		if (len < 0) {
 			// TODO: Do something better like forwarding the error to the user.
-            if (!socket_->isBlocking()) {
+            if (!mSocket->isBlocking()) {
 			}
 			return;
 		}
 
-		inpos_ += len;
+        mInpos += len;
 
-        processInput(inbuf_, inpos_);
+        processInput(mInBuf, mInpos);
 
-		if (inpos_ >= insize_) {
+        if (mInpos >= mInSize) {
 			ASSERT(false);
-			inpos_ = 0;
+            mInpos = 0;
 		}
 	}
 
     void AsyncTCPSocket::onWriteEvent(QyAsyncSocket* socket)
 	{
         HUNUSED(socket);
-		ASSERT(socket == socket_);
+        ASSERT(socket == mSocket);
 
-		if (outpos_ > 0) {
+        if (mOutpos > 0) {
             flush();
 		}
 	}

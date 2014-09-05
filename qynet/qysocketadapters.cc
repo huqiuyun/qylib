@@ -12,31 +12,31 @@
 #include <time.h>
 #include <errno.h>
 #include "qysocketadapters.h"
-#include "qybytebuffer.h"
+#include "qyByteBuffer.h"
 #include "qydebug.h"
 
 namespace qy 
 {
     QyBufferedReadAdapter::QyBufferedReadAdapter(QyAsyncSocket* socket, size_t buffer_size)
         : QyAsyncSocketAdapter(socket)
-		, buffer_size_(buffer_size)
-		, data_len_(0)
-		, buffering_(false)
+        , mBufferSize(buffer_size)
+        , mDataLen(0)
+        , mBuffering(false)
 	{
-			buffer_ = new char[buffer_size_];
+            mBuffer = new char[mBufferSize];
 	}
 
     QyBufferedReadAdapter::~QyBufferedReadAdapter()
 	{
-		delete [] buffer_;
+        delete [] mBuffer;
 	}
 
     int QyBufferedReadAdapter::send(const void *pv, size_t cb)
 	{
-		if (buffering_) 
+        if (mBuffering)
 		{
 			// TODO: Spoof error better; Signal Writeable
-            socket_->setError(EWOULDBLOCK);
+            mSocket->setError(EWOULDBLOCK);
 			return -1;
 		}
         return QyAsyncSocketAdapter::send(pv, cb);
@@ -44,21 +44,21 @@ namespace qy
 
     int QyBufferedReadAdapter::recv(void *pv, size_t cb)
 	{
-		if (buffering_)
+        if (mBuffering)
 		{
-            socket_->setError(EWOULDBLOCK);
+            mSocket->setError(EWOULDBLOCK);
 			return -1;
 		}
 
 		size_t read = 0;
 
-		if (data_len_)
+        if (mDataLen)
 		{
-			read = _min(cb, data_len_);
-			memcpy(pv, buffer_, read);
-			data_len_ -= read;
-			if (data_len_ > 0) {
-				memmove(buffer_, buffer_ + read, data_len_);
+            read = _min(cb, mDataLen);
+            memcpy(pv, mBuffer, read);
+            mDataLen -= read;
+            if (mDataLen > 0) {
+                memmove(mBuffer, mBuffer + read, mDataLen);
 			}
 			pv = static_cast<char *>(pv) + read;
 			cb -= read;
@@ -75,32 +75,32 @@ namespace qy
 
     void QyBufferedReadAdapter::bufferInput(bool on)
 	{
-		buffering_ = on;
+        mBuffering = on;
 	}
 
     void QyBufferedReadAdapter::onReadEvent(QyAsyncSocket * socket)
 	{
-		ASSERT(socket == socket_);
+        ASSERT(socket == mSocket);
 
-		if (!buffering_) 
+        if (!mBuffering)
 		{
             QyAsyncSocketAdapter::onReadEvent(socket);
 			return;
 		}
 
-        if (data_len_ >= buffer_size_) {
+        if (mDataLen >= mBufferSize) {
 			ASSERT(false);
-			data_len_ = 0;
+            mDataLen = 0;
 		}
 
-        int len = socket_->recv(buffer_ + data_len_, buffer_size_ - data_len_);
+        int len = mSocket->recv(mBuffer + mDataLen, mBufferSize - mDataLen);
         if (len < 0) {
 			return;
 		}
 
-		data_len_ += len;
+        mDataLen += len;
 
-        processInput(buffer_, data_len_);
+        processInput(mBuffer, mDataLen);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////
@@ -134,7 +134,7 @@ namespace qy
 
     void QyAsyncSSLSocket::onConnectEvent(QyAsyncSocket * socket)
 	{
-		ASSERT(socket == socket_);
+        ASSERT(socket == mSocket);
 
 		// TODO: we could buffer output too...
         int res = directSend(SSL_CLIENT_HELLO, sizeof(SSL_CLIENT_HELLO));
@@ -169,42 +169,42 @@ namespace qy
 
 	///////////////////////////////////////////////////////////////////////////////
 
-    QyAsyncSocksProxySocket::QyAsyncSocksProxySocket(QyAsyncSocket* socket,
+    QyAsyncProxySocket::QyAsyncProxySocket(QyAsyncSocket* socket,
         const QySocketAddress& proxy,
         const std::string& username, const QyCryptString& password)
         : QyBufferedReadAdapter(socket, 1024)
-		, proxy_(proxy)
-		, user_(username)
-		, pass_(password)
-		, state_(SS_ERROR)
+        , mProxy(proxy)
+        , mUser(username)
+        , mPassword(password)
+        , mProxyState(SS_ERROR)
 	{
 	}
 
-    int QyAsyncSocksProxySocket::connect(const QySocketAddress& addr)
+    int QyAsyncProxySocket::connect(const QySocketAddress& addr)
 	{
-		dest_ = addr;
+        mDest = addr;
         bufferInput(true);
-        return QyBufferedReadAdapter::connect(proxy_);
+        return QyBufferedReadAdapter::connect(mProxy);
 	}
 
-    QySocketAddress QyAsyncSocksProxySocket::remoteAddress() const
+    QySocketAddress QyAsyncProxySocket::remoteAddress() const
 	{
-		return dest_;
+        return mDest;
 	}
 
-    void QyAsyncSocksProxySocket::onConnectEvent(QyAsyncSocket *)
+    void QyAsyncProxySocket::onConnectEvent(QyAsyncSocket *)
 	{
         sendHello();
 	}
 
-    void QyAsyncSocksProxySocket::processInput(char * data, size_t& len)
+    void QyAsyncProxySocket::processInput(char * data, size_t& len)
 	{
-		ASSERT(state_ < SS_TUNNEL);
+        ASSERT(mProxyState < SS_TUNNEL);
 
-		ByteBuffer response(data, len);
+        QyByteBuffer response(data, len);
 
-		if (state_ == SS_HELLO) {
-			uint8 ver, method;
+        if (mProxyState == SS_HELLO) {
+            uint8 ver=0, method=255;
 			if (!response.ReadUInt8(ver) ||
 				!response.ReadUInt8(method))
 				return;
@@ -222,7 +222,7 @@ namespace qy
                 setError(0);
 				return;
 			}
-		} else if (state_ == SS_AUTH) {
+        } else if (mProxyState == SS_AUTH) {
 			uint8 ver, status;
 			if (!response.ReadUInt8(ver) ||
 				!response.ReadUInt8(status))
@@ -234,7 +234,7 @@ namespace qy
 			}
 
             sendConnect();
-		} else if (state_ == SS_CONNECT) {
+        } else if (mProxyState == SS_CONNECT) {
 			uint8 ver, rep, rsv, atyp;
 			if (!response.ReadUInt8(ver) ||
 				!response.ReadUInt8(rep) ||
@@ -273,14 +273,14 @@ namespace qy
 				return;
 			}
 
-			state_ = SS_TUNNEL;
+            mProxyState = SS_TUNNEL;
 		}
 
 		// Consume parsed data
 		len = response.Length();
 		memcpy(data, response.Data(), len);
 
-		if (state_ != SS_TUNNEL)
+        if (mProxyState != SS_TUNNEL)
 			return;
 
 		bool remainder = (len > 0);
@@ -292,11 +292,11 @@ namespace qy
             sigReadEvent(this); // TODO: signal this??
 	}
 
-    void QyAsyncSocksProxySocket::sendHello()
+    void QyAsyncProxySocket::sendHello()
 	{
-		ByteBuffer request;
+        QyByteBuffer request;
 		request.WriteUInt8(5);   // Socks Version
-		if (user_.empty()) {
+        if (mUser.empty()) {
 			request.WriteUInt8(1); // Authentication Mechanisms
 			request.WriteUInt8(0); // No authentication
 		} else {
@@ -305,49 +305,49 @@ namespace qy
 			request.WriteUInt8(2); // Username/Password
 		}
         directSend(request.Data(), request.Length());
-		state_ = SS_HELLO;
+        mProxyState = SS_HELLO;
 	}
 
-    void QyAsyncSocksProxySocket::sendAuth()
+    void QyAsyncProxySocket::sendAuth()
 	{
-		ByteBuffer request;
+        QyByteBuffer request;
 		request.WriteUInt8(1);      // Negotiation Version
-		request.WriteUInt8(static_cast<uint8>(user_.size()));
-		request.WriteString(user_); // Username
-        request.WriteUInt8(static_cast<uint8>(pass_.length()));
-        size_t len = pass_.length() + 1;
+        request.WriteUInt8(static_cast<uint8>(mUser.size()));
+        request.WriteString(mUser); // Username
+        request.WriteUInt8(static_cast<uint8>(mPassword.length()));
+        size_t len = mPassword.length() + 1;
 		char * sensitive = new char[len];
-        pass_.copyTo(sensitive, true);
+        mPassword.copyTo(sensitive, true);
 		request.WriteString(sensitive); // Password
 		memset(sensitive, 0, len);
 		delete [] sensitive;
         directSend(request.Data(), request.Length());
-		state_ = SS_AUTH;
+        mProxyState = SS_AUTH;
 	}
 
-    void QyAsyncSocksProxySocket::sendConnect()
+    void QyAsyncProxySocket::sendConnect()
 	{
-		ByteBuffer request;
+        QyByteBuffer request;
 		request.WriteUInt8(5);             // Socks Version
 		request.WriteUInt8(1);             // CONNECT
 		request.WriteUInt8(0);             // Reserved
-        if (dest_.isUnresolved()) {
-            std::string hostname = dest_.ipAsString();
+        if (mDest.isUnresolved()) {
+            std::string hostname = mDest.ipAsString();
 			request.WriteUInt8(3);           // DOMAINNAME
 			request.WriteUInt8(static_cast<uint8>(hostname.size()));
 			request.WriteString(hostname);   // Destination Hostname
 		} else {
 			request.WriteUInt8(1);           // IPV4
-			request.WriteUInt32(dest_.ip()); // Destination IP
+            request.WriteUInt32(mDest.ip()); // Destination IP
 		}
-		request.WriteUInt16(dest_.port()); // Destination Port
+        request.WriteUInt16(mDest.port()); // Destination Port
         directSend(request.Data(), request.Length());
-		state_ = SS_CONNECT;
+        mProxyState = SS_CONNECT;
 	}
 
-    void QyAsyncSocksProxySocket::setError(int error)
+    void QyAsyncProxySocket::setError(int error)
 	{
-		state_ = SS_ERROR;
+        mProxyState = SS_ERROR;
         bufferInput(false);
         close();
         setError(SOCKET_EACCES);

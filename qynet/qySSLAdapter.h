@@ -9,11 +9,11 @@ namespace qy
 	{
 	public:
         QySSLAdapter(QyAsyncSocket* socket)
-            : QyAsyncSocketAdapter(socket), ignore_bad_cert_(false)
+            : QyAsyncSocketAdapter(socket), mIgnoreBadCert(false)
 		{ }
 
-		bool ignore_bad_cert() const { return ignore_bad_cert_; }
-		void set_ignore_bad_cert(bool ignore) { ignore_bad_cert_ = ignore; }
+        bool ignore_bad_cert() const { return mIgnoreBadCert; }
+        void set_ignore_bad_cert(bool ignore) { mIgnoreBadCert = ignore; }
 
 		// StartSSL returns 0 if successful.
 		// If StartSSL is called while the socket is closed or connecting, the SSL
@@ -25,7 +25,7 @@ namespace qy
 
 	private:
 		// If true, the server certificate need not match the configured hostname.
-		bool ignore_bad_cert_;
+        bool mIgnoreBadCert;
 	};
 
     // modified by huqiuyun 2008-01-22

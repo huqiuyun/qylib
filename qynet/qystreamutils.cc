@@ -8,26 +8,26 @@ namespace qy {
 
 QyStreamRelay::QyStreamRelay(QyStreamInterface* s1,
                          QyStreamInterface* s2,
-						 size_t buffer_size) : buffer_size_(buffer_size) 
+                         size_t buffer_size) : mBuffSize(buffer_size)
 {
-	dir_[0].stream = s1;
-	dir_[1].stream = s2;
+    mDir[0].stream = s1;
+    mDir[1].stream = s2;
 
     ASSERT(s1->state() != SS_CLOSED);
     ASSERT(s2->state() != SS_CLOSED);
 
 	for (size_t i=0; i<2; ++i) {
-        dir_[i].stream->sigEvent.connect(this, &QyStreamRelay::onEvent);
-		dir_[i].buffer = new char[buffer_size_];
-		dir_[i].data_len = 0;
+        mDir[i].stream->sigEvent.connect(this, &QyStreamRelay::onEvent);
+        mDir[i].buffer = new char[mBuffSize];
+        mDir[i].data_len = 0;
 	}
 }
 
 QyStreamRelay::~QyStreamRelay()
 {
 	for (size_t i=0; i<2; ++i) {
-		delete dir_[i].stream;
-		delete [] dir_[i].buffer;
+        delete mDir[i].stream;
+        delete [] mDir[i].buffer;
 	}
 }
 
@@ -44,23 +44,23 @@ QyStreamRelay::circulate()
 void
 QyStreamRelay::close() {
 	for (size_t i=0; i<2; ++i) {
-        dir_[i].stream->sigEvent.disconnect(this);
-        dir_[i].stream->close();
+        mDir[i].stream->sigEvent.disconnect(this);
+        mDir[i].stream->close();
 	}
 }
 
 bool
 QyStreamRelay::flow(int read_index, int* error)
 {
-	Direction& reader = dir_[read_index];
-    Direction& writer = dir_[complement(read_index)];
+    Direction& reader = mDir[read_index];
+    Direction& writer = mDir[complement(read_index)];
 
 	bool progress;
 	do {
 		progress = false;
 
         while (reader.stream->state() == SS_OPEN) {
-			size_t available = buffer_size_ - reader.data_len;
+            size_t available = mBuffSize - reader.data_len;
 			if (available == 0)
 				break;
 
@@ -141,7 +141,7 @@ void QyStreamRelay::onEvent(QyStreamInterface* stream, int events,
 ///////////////////////////////////////////////////////////////////////////////
 
 QyStreamCounter::QyStreamCounter(QyStreamInterface* stream)
-: QyStreamAdapterInterface(stream), count_(0)
+: QyStreamAdapterInterface(stream), mCount(0)
 {
 }
 
@@ -155,8 +155,8 @@ StreamResult QyStreamCounter::read(void* buffer, size_t buffer_len,
         = QyStreamAdapterInterface::read(buffer, buffer_len,
 		read, error);
     if (result == SR_SUCCESS)
-		count_ += *read;
-    sigUpdateByteCount(count_);
+        mCount += *read;
+    sigUpdateByteCount(mCount);
 	return result;
 }
 
@@ -169,8 +169,8 @@ StreamResult QyStreamCounter::write(const void* data, size_t data_len,
     StreamResult result
         = QyStreamAdapterInterface::write(data, data_len, written, error);
     if (result == SR_SUCCESS)
-		count_ += *written;
-    sigUpdateByteCount(count_);
+        mCount += *written;
+    sigUpdateByteCount(mCount);
 	return result;
 }
 } // namesapce qy

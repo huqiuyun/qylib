@@ -15,8 +15,8 @@ namespace qy
         virtual ~QyAsyncUDPSocket();
 
 	private:
-		char* buf_;
-		size_t size_;
+        char* mBuf;
+        size_t mSize;
 
 		// Called when the underlying socket is ready to be read from.
         void onReadEvent(QyAsyncSocket* socket);

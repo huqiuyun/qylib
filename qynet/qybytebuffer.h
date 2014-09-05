@@ -6,17 +6,17 @@
 
 namespace qy
 {
-	class ByteBuffer
+    class QyByteBuffer
 	{
 	public:
-		ByteBuffer();
-		ByteBuffer(const char* bytes, size_t len);
-		ByteBuffer(const char* bytes); // uses strlen
-		~ByteBuffer();
+        QyByteBuffer();
+        QyByteBuffer(const char* bytes, size_t len);
+        QyByteBuffer(const char* bytes); // uses strlen
+        ~QyByteBuffer();
 
-		const char* Data() const { return bytes_ + start_; }
-		size_t Length() { return end_ - start_; }
-		size_t Capacity() { return size_ - start_; }
+        const char* Data() const { return mBytes + mStart; }
+        size_t Length() { return mEnd - mStart; }
+        size_t Capacity() { return mSize - mStart; }
 
 		bool ReadUInt8(uint8& val);
 		bool ReadUInt16(uint16& val);
@@ -29,7 +29,7 @@ namespace qy
 		void WriteUInt32(uint32 val);
 		void WriteString(const std::string& val);
 		void WriteBytes(const char* val, size_t len);
-		void WriteBytes(int index,const char* val,size_t len);
+        void WriteBytes(uint32 index,const char* val,size_t len);
 
 		void Resize(size_t size);
 		void Shift(size_t size);
@@ -37,10 +37,10 @@ namespace qy
 		//
 		void Clear();
 	private:
-		char* bytes_;
-		size_t size_;
-		size_t start_;
-		size_t end_;
+        char* mBytes;
+        size_t mSize;
+        size_t mStart;
+        size_t mEnd;
 	};
 }
 

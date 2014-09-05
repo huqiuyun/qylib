@@ -1,5 +1,5 @@
-#ifndef QY_AsyncPacketSocket_H__
-#define QY_AsyncPacketSocket_H__
+#ifndef QY_AsyncPacketmSocketH__
+#define QY_AsyncPacketmSocketH__
 
 #include "qyAsyncSocket.h"
 
@@ -14,6 +14,7 @@ namespace qy
         virtual ~QyAsyncPacketSocket();
 
 		// Relevant socket methods:
+        virtual SOCKET socket() const;
         virtual QySocketAddress localAddress() const;
         virtual QySocketAddress remoteAddress() const;
         virtual int bind(const QySocketAddress& addr);
@@ -21,7 +22,7 @@ namespace qy
         virtual int send(const void *pv, size_t cb);
         virtual int sendTo(const void *pv, size_t cb, const QySocketAddress& addr);
         virtual int close();
-        virtual int setOption(QySocket::Option opt, int value);
+        virtual int setOption(int opt, int optflag, const void *value, size_t valLen);
         virtual int error() const;
         virtual void setError(int error);
 
@@ -29,8 +30,8 @@ namespace qy
         sigslot::signal4<const char*, size_t, const QySocketAddress&, QyAsyncPacketSocket*> sigReadPacket;
 
 	protected:
-        QyAsyncSocket* socket_;
+        QyAsyncSocket* mSocket;
 	};
 } // namespace qy
 
-#endif // QY_AsyncPacketSocket_H__
+#endif // QY_AsyncPacketmSocketH__

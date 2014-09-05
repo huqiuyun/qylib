@@ -13,8 +13,8 @@ public:
   QySocketAddressPair() {}
   QySocketAddressPair(const QySocketAddress& srs, const QySocketAddress& dest);
 
-  const QySocketAddress& source() const { return src_; }
-  const QySocketAddress& destination() const { return dest_; }
+  const QySocketAddress& source() const { return mSource; }
+  const QySocketAddress& destination() const { return mDest; }
 
   bool operator ==(const QySocketAddressPair& r) const;
   bool operator <(const QySocketAddressPair& r) const;
@@ -22,8 +22,8 @@ public:
   size_t hash() const;
 
 private:
-  QySocketAddress src_;
-  QySocketAddress dest_;
+  QySocketAddress mSource;
+  QySocketAddress mDest;
 };
 
 } // namespace qy

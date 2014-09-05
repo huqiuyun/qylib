@@ -195,7 +195,7 @@
 #       define __IPHONE_7_0 70000
 #  endif
 #
-#  if (__MAC_OS_X_VERSION_MAX_ALLOWED > __MAC_10_8)
+#  if (__MAC_OS_X_VERSION_MAX_ALLOWED > __MAC_10_9)
 #    warning "This version of OS X is unsupported"
 #  endif
 #endif

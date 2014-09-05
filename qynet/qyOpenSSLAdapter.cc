@@ -127,24 +127,24 @@ class QyOpenSSLAdapterPrivate
 {
 public:
     QyOpenSSLAdapterPrivate() :
-        state_(QyOpenSSLAdapter::SSL_NONE),
-        ssl_read_needs_write_(false),
-        ssl_write_needs_read_(false),
-        restartable_(false),
-        ssl_(NULL), ssl_ctx_(NULL)
+        mState(QyOpenSSLAdapter::SSL_NONE),
+        mSsl_write_needs_write(false),
+        mSsl_write_needs_read(false),
+        mRestartable(false),
+        mSsl(NULL), mSslCtx(NULL)
     {
 
     }
 
-    QyOpenSSLAdapter::SSLState state_;
-    bool ssl_read_needs_write_;
-    bool ssl_write_needs_read_;
+    QyOpenSSLAdapter::SSLState mState;
+    bool mSsl_write_needs_write;
+    bool mSsl_write_needs_read;
     // If true, socket will retain SSL configuration after Close.
-    bool restartable_;
+    bool mRestartable;
 
-    SSL* ssl_;
-    SSL_CTX* ssl_ctx_;
-    std::string ssl_host_name_;
+    SSL* mSsl;
+    SSL_CTX* mSslCtx;
+    std::string mSslHostname;
 };
 
 QyOpenSSLAdapter::QyOpenSSLAdapter(QyAsyncSocket* socket):
@@ -159,18 +159,18 @@ QyOpenSSLAdapter::~QyOpenSSLAdapter() {
 }
 
 int QyOpenSSLAdapter::startSSL(const char* hostname, bool restartable) {
-    if (d_ptr->state_ != SSL_NONE)
+    if (d_ptr->mState != SSL_NONE)
         return -1;
 
-    d_ptr->ssl_host_name_ = hostname;
-    d_ptr->restartable_ = restartable;
+    d_ptr->mSslHostname = hostname;
+    d_ptr->mRestartable = restartable;
 
-    if (socket_->state() != QySocket::CS_CONNECTED) {
-        d_ptr->state_ = SSL_WAIT;
+    if (mSocket->connState() != QySocket::CS_CONNECTED) {
+        d_ptr->mState = SSL_WAIT;
         return 0;
     }
 
-    d_ptr->state_ = SSL_CONNECTING;
+    d_ptr->mState = SSL_CONNECTING;
     if (int err = beginSSL()) {
         setErrorWithContext("BeginSSL", err, false);
         return err;
@@ -181,36 +181,36 @@ int QyOpenSSLAdapter::startSSL(const char* hostname, bool restartable) {
 
 int
 QyOpenSSLAdapter::beginSSL() {
-    ASSERT(d_ptr->state_ == SSL_CONNECTING);
+    ASSERT(d_ptr->mState == SSL_CONNECTING);
 
     int err = 0;
     BIO* bio = NULL;
 
     // First set up the context
-    if (!d_ptr->ssl_ctx_)
-        d_ptr->ssl_ctx_ = setupSSLContext();
+    if (!d_ptr->mSslCtx)
+        d_ptr->mSslCtx = setupSSLContext();
 
-    if (!d_ptr->ssl_ctx_) {
+    if (!d_ptr->mSslCtx) {
         err = -1;
         goto ssl_error;
     }
 
-    bio = BIO_new_socket(static_cast<qy::QyAsyncSocketAdapter*>(socket_));
+    bio = BIO_new_socket(static_cast<qy::QyAsyncSocketAdapter*>(mSocket));
     if (!bio) {
         err = -1;
         goto ssl_error;
     }
 
-    d_ptr->ssl_ = SSL_new(d_ptr->ssl_ctx_);
-    if (!d_ptr->ssl_) {
+    d_ptr->mSsl = SSL_new(d_ptr->mSslCtx);
+    if (!d_ptr->mSsl) {
         err = -1;
         goto ssl_error;
     }
 
-    SSL_set_app_data(d_ptr->ssl_, this);
+    SSL_set_app_data(d_ptr->mSsl, this);
 
-    SSL_set_bio(d_ptr->ssl_, bio, bio);
-    SSL_set_mode(d_ptr->ssl_, SSL_MODE_ENABLE_PARTIAL_WRITE |
+    SSL_set_bio(d_ptr->mSsl, bio, bio);
+    SSL_set_mode(d_ptr->mSsl, SSL_MODE_ENABLE_PARTIAL_WRITE |
                  SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
     // the SSL object owns the bio now
@@ -232,20 +232,20 @@ ssl_error:
 }
 
 int QyOpenSSLAdapter::continueSSL() {
-    ASSERT(d_ptr->state_ == SSL_CONNECTING);
+    ASSERT(d_ptr->mState == SSL_CONNECTING);
 
-    int code = SSL_connect(d_ptr->ssl_);
-    switch (SSL_get_error(d_ptr->ssl_, code)) {
+    int code = SSL_connect(d_ptr->mSsl);
+    switch (SSL_get_error(d_ptr->mSsl, code)) {
     case SSL_ERROR_NONE:
 
-        if (!SSLPostConnectionCheck(d_ptr->ssl_, d_ptr->ssl_host_name_.c_str())) {
+        if (!SSLPostConnectionCheck(d_ptr->mSsl, d_ptr->mSslHostname.c_str())) {
             // make sure we close the socket
             cleanup();
             // The connect failed so return -1 to shut down the socket
             return -1;
         }
 
-        d_ptr->state_ = SSL_CONNECTED;
+        d_ptr->mState = SSL_CONNECTED;
         QyAsyncSocketAdapter::onConnectEvent(this);
 
         break;
@@ -266,7 +266,7 @@ int QyOpenSSLAdapter::continueSSL() {
 
 void QyOpenSSLAdapter::setErrorWithContext(const char* context, int err, bool signal) {
     HUNUSED(context);
-    d_ptr->state_ = SSL_ERROR;
+    d_ptr->mState = SSL_ERROR;
     setError(err);
     if (signal)
         QyAsyncSocketAdapter::onCloseEvent(this, err);
@@ -274,24 +274,24 @@ void QyOpenSSLAdapter::setErrorWithContext(const char* context, int err, bool si
 
 void QyOpenSSLAdapter::cleanup() {
 
-    d_ptr->state_ = SSL_NONE;
-    d_ptr->ssl_read_needs_write_ = false;
-    d_ptr->ssl_write_needs_read_ = false;
+    d_ptr->mState = SSL_NONE;
+    d_ptr->mSsl_write_needs_write = false;
+    d_ptr->mSsl_write_needs_read = false;
 
-    if (d_ptr->ssl_) {
-        SSL_free(d_ptr->ssl_);
-        d_ptr->ssl_ = NULL;
+    if (d_ptr->mSsl) {
+        SSL_free(d_ptr->mSsl);
+        d_ptr->mSsl = NULL;
     }
 
-    if (d_ptr->ssl_ctx_) {
-        SSL_CTX_free(d_ptr->ssl_ctx_);
-        d_ptr->ssl_ctx_ = NULL;
+    if (d_ptr->mSslCtx) {
+        SSL_CTX_free(d_ptr->mSslCtx);
+        d_ptr->mSslCtx = NULL;
     }
 }
 
 int QyOpenSSLAdapter::send(const void* pv, size_t cb) {
 
-    switch (d_ptr->state_) {
+    switch (d_ptr->mState) {
     case SSL_NONE:
         return QyAsyncSocketAdapter::send(pv, cb);
 
@@ -312,14 +312,14 @@ int QyOpenSSLAdapter::send(const void* pv, size_t cb) {
     if (cb == 0)
         return 0;
 
-    d_ptr->ssl_write_needs_read_ = false;
+    d_ptr->mSsl_write_needs_read = false;
 
-    int code = SSL_write(d_ptr->ssl_, pv, cb);
-    switch (SSL_get_error(d_ptr->ssl_, code)) {
+    int code = SSL_write(d_ptr->mSsl, pv, cb);
+    switch (SSL_get_error(d_ptr->mSsl, code)) {
     case SSL_ERROR_NONE:
         return code;
     case SSL_ERROR_WANT_READ:
-        d_ptr->ssl_write_needs_read_ = true;
+        d_ptr->mSsl_write_needs_read = true;
         setError(EWOULDBLOCK);
         break;
     case SSL_ERROR_WANT_WRITE:
@@ -340,7 +340,7 @@ int QyOpenSSLAdapter::send(const void* pv, size_t cb) {
 }
 
 int QyOpenSSLAdapter::recv(void* pv, size_t cb) {
-    switch (d_ptr->state_) {
+    switch (d_ptr->mState) {
     case SSL_NONE:
         return QyAsyncSocketAdapter::recv(pv, cb);
 
@@ -361,17 +361,17 @@ int QyOpenSSLAdapter::recv(void* pv, size_t cb) {
     if (cb == 0)
         return 0;
 
-    d_ptr->ssl_read_needs_write_ = false;
+    d_ptr->mSsl_write_needs_write = false;
 
-    int code = SSL_read(d_ptr->ssl_, pv, cb);
-    switch (SSL_get_error(d_ptr->ssl_, code)) {
+    int code = SSL_read(d_ptr->mSsl, pv, cb);
+    switch (SSL_get_error(d_ptr->mSsl, code)) {
     case SSL_ERROR_NONE:
         return code;
     case SSL_ERROR_WANT_READ:
         setError(EWOULDBLOCK);
         break;
     case SSL_ERROR_WANT_WRITE:
-        d_ptr->ssl_read_needs_write_ = true;
+        d_ptr->mSsl_write_needs_write = true;
         setError(EWOULDBLOCK);
         break;
     case SSL_ERROR_ZERO_RETURN:
@@ -387,26 +387,26 @@ int QyOpenSSLAdapter::recv(void* pv, size_t cb) {
 
 int QyOpenSSLAdapter::close() {
     cleanup();
-    d_ptr->state_ = d_ptr->restartable_ ? SSL_WAIT : SSL_NONE;
+    d_ptr->mState = d_ptr->mRestartable ? SSL_WAIT : SSL_NONE;
     return QyAsyncSocketAdapter::close();
 }
 
 QySocket::ConnState QyOpenSSLAdapter::state() const {
 
-    ConnState state = socket_->state();
+    ConnState state = mSocket->connState();
     if ((state == CS_CONNECTED)
-            && ((d_ptr->state_ == SSL_WAIT) || (d_ptr->state_ == SSL_CONNECTING)))
+            && ((d_ptr->mState == SSL_WAIT) || (d_ptr->mState == SSL_CONNECTING)))
         state = CS_CONNECTING;
     return state;
 }
 
 void QyOpenSSLAdapter::onConnectEvent(QyAsyncSocket* socket) {
-    if (d_ptr->state_ != SSL_WAIT) {
-        ASSERT(d_ptr->state_ == SSL_NONE);
+    if (d_ptr->mState != SSL_WAIT) {
+        ASSERT(d_ptr->mState == SSL_NONE);
         QyAsyncSocketAdapter::onConnectEvent(socket);
         return;
     }
-    d_ptr->state_ = SSL_CONNECTING;
+    d_ptr->mState = SSL_CONNECTING;
     if (int err = beginSSL()) {
         QyAsyncSocketAdapter::onCloseEvent(socket, err);
     }
@@ -414,45 +414,45 @@ void QyOpenSSLAdapter::onConnectEvent(QyAsyncSocket* socket) {
 
 void QyOpenSSLAdapter::onReadEvent(QyAsyncSocket* socket) {
 
-    if (d_ptr->state_ == SSL_NONE) {
+    if (d_ptr->mState == SSL_NONE) {
         QyAsyncSocketAdapter::onReadEvent(socket);
         return;
     }
 
-    if (d_ptr->state_ == SSL_CONNECTING) {
+    if (d_ptr->mState == SSL_CONNECTING) {
         if (int err = continueSSL()) {
             setErrorWithContext("ContinueSSL", err);
         }
         return;
     }
 
-    if (d_ptr->state_ != SSL_CONNECTED)
+    if (d_ptr->mState != SSL_CONNECTED)
         return;
 
     // Don't let ourselves go away during the callbacks
-    if (d_ptr->ssl_write_needs_read_)  {
+    if (d_ptr->mSsl_write_needs_read)  {
         QyAsyncSocketAdapter::onWriteEvent(socket);
     }
     QyAsyncSocketAdapter::onReadEvent(socket);
 }
 
 void QyOpenSSLAdapter::onWriteEvent(QyAsyncSocket* socket) {
-    if (d_ptr->state_ == SSL_NONE) {
+    if (d_ptr->mState == SSL_NONE) {
         QyAsyncSocketAdapter::onWriteEvent(socket);
         return;
     }
 
-    if (d_ptr->state_ == SSL_CONNECTING) {
+    if (d_ptr->mState == SSL_CONNECTING) {
         if (int err = continueSSL()) {
             setErrorWithContext("ContinueSSL", err);
         }
         return;
     }
 
-    if (d_ptr->state_ != SSL_CONNECTED)
+    if (d_ptr->mState != SSL_CONNECTED)
         return;
 
-    if (d_ptr->ssl_read_needs_write_)  {
+    if (d_ptr->mSsl_write_needs_write)  {
         QyAsyncSocketAdapter::onReadEvent(socket);
     }
 

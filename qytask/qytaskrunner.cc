@@ -14,17 +14,16 @@ class QyTaskRunnerPrivate
 {
 public:
     QyTaskRunnerPrivate() :
-        next_timeout_task_(NULL),
-        tasks_running_(false)
+        mNextTimeoutTask(NULL),
+        mTaskRunning(false)
 	{
 	}
-	TaskSet deltasks_;
-	QySLCS  del_crit_;
-
-	QySLCS   task_crit_;
-	TaskList tasks_;
-	QyTask *next_timeout_task_;
-	bool tasks_running_;
+    TaskSet  mDelTasks;
+    QySLCS   mDelCrit;
+    QySLCS   mTaskCrit;
+    TaskList mTasks;
+    QyTask  *mNextTimeoutTask;
+    bool     mTaskRunning;
 };
 
 QyTaskRunner::QyTaskRunner()
@@ -51,8 +50,8 @@ int QyTaskRunner::startTask(QyTask * task)
 {
 	QY_D(QyTaskRunner);
 	{
-		QyAutoLocker cs(&d->task_crit_);
-		d->tasks_.push_back(task);
+        QyAutoLocker cs(&d->mTaskCrit);
+        d->mTasks.push_back(task);
 	}
 	// the task we just started could be about to timeout --
 	// make sure our "next timeout task" is correct
@@ -68,21 +67,21 @@ void QyTaskRunner::runTasks()
 	QY_D(QyTaskRunner);
 
 	// Running continues until all tasks are Blocked (ok for a small # of tasks)
-    if (d->tasks_running_)
+    if (d->mTaskRunning)
 		return;  // don't reenter
 
-	d->tasks_running_ = true;	
+    d->mTaskRunning = true;
 	// push temp task list,to do prevent lockdead
 	TaskList runtask;
 	{		
-		QyAutoLocker cs(&d->task_crit_);
-		runtask = d->tasks_;
+        QyAutoLocker cs(&d->mTaskCrit);
+        runtask = d->mTasks;
 	}
 	
 	bool did = true;
     while (did) {
 		did = false;
-		// use indexing instead of iterators because tasks_ may grow
+        // use indexing instead of iterators because mTasks may grow
 		TaskList::iterator it = runtask.begin();
         while (it != runtask.end()) {
 			QyTask* task = *it;
@@ -96,7 +95,7 @@ void QyTaskRunner::runTasks()
 
 	endTasks();
 
-	d->tasks_running_ = false;
+    d->mTaskRunning = false;
 
     delTasks();
 }
@@ -107,18 +106,18 @@ void QyTaskRunner::endTasks()
 	QY_D(QyTaskRunner);
 	bool need_timeout_recalc = false;
 	{// for lockdead
-		QyAutoLocker cs(&d->task_crit_);
-		TaskList::iterator it = d->tasks_.begin();
-        while (it != d->tasks_.end()) {
+        QyAutoLocker cs(&d->mTaskCrit);
+        TaskList::iterator it = d->mTasks.begin();
+        while (it != d->mTasks.end()) {
 			QyTask* task = *it;
             if (task->isDone() && task->allChildrenDone()) {
-				if (d->next_timeout_task_ && 
-                    d->next_timeout_task_->get_unique_id() == task->get_unique_id()) {
-					d->next_timeout_task_ = NULL;
+                if (d->mNextTimeoutTask &&
+                    d->mNextTimeoutTask->get_unique_id() == task->get_unique_id()) {
+                    d->mNextTimeoutTask = NULL;
 					need_timeout_recalc = true;
 				}
 				delete task;
-				it = d->tasks_.erase(it);
+                it = d->mTasks.erase(it);
 			}
             else {
 				++it;
@@ -135,20 +134,20 @@ void QyTaskRunner::readyDelete(QyTask* task)
 {
 	QY_D(QyTaskRunner);
 
-    QyAutoLocker cs(&d->del_crit_);
-    d->deltasks_.insert(task);
+    QyAutoLocker cs(&d->mDelCrit);
+    d->mDelTasks.insert(task);
 }
 
 void QyTaskRunner::delTasks()
 {
 	QY_D(QyTaskRunner);
 
-    QyAutoLocker cs(&d->del_crit_);
-	if (d->deltasks_.size() > 0) {
-		for (TaskSet::iterator it = d->deltasks_.begin(); it != d->deltasks_.end(); ++it){
+    QyAutoLocker cs(&d->mDelCrit);
+    if (d->mDelTasks.size() > 0) {
+        for (TaskSet::iterator it = d->mDelTasks.begin(); it != d->mDelTasks.end(); ++it){
             delete (*it);
 		}
-        d->deltasks_.clear();
+        d->mDelTasks.clear();
     }
 }
 
@@ -158,8 +157,8 @@ void QyTaskRunner::pollTasks()
 
 	// see if our "next potentially timed-out task" has indeed timed out.
 	// If it has, wake it up, then queue up the next task in line
-    if (d->next_timeout_task_ && d->next_timeout_task_->timedOut()) {
-		d->next_timeout_task_->wake();
+    if (d->mNextTimeoutTask && d->mNextTimeoutTask->timedOut()) {
+        d->mNextTimeoutTask->wake();
 		wakeTasks();
 	}
 }
@@ -179,13 +178,13 @@ void QyTaskRunner::updateTaskTimeout(QyTask *task)
 	// check to see if it's closer than the current
 	// "about to timeout" task
 	if (task->get_timeout_time()) {
-		if (d->next_timeout_task_ == NULL ||
-            (task->get_timeout_time() <= d->next_timeout_task_->get_timeout_time())) {
-			d->next_timeout_task_ = task;
+        if (d->mNextTimeoutTask == NULL ||
+            (task->get_timeout_time() <= d->mNextTimeoutTask->get_timeout_time())) {
+            d->mNextTimeoutTask = task;
 		}
 	}
-	else if (d->next_timeout_task_ != NULL &&
-        task->get_unique_id() == d->next_timeout_task_->get_unique_id()) {
+    else if (d->mNextTimeoutTask != NULL &&
+        task->get_unique_id() == d->mNextTimeoutTask->get_unique_id()) {
 		// otherwise, if the task doesn't have a timeout,
 		// and it used to be our "about to timeout" task,
 		// walk through all the tasks looking for the real
@@ -204,11 +203,11 @@ void QyTaskRunner::recalcNextTimeout(QyTask *exclude_task)
 	QY_D(QyTaskRunner);
 
 	int64 next_timeout_time = 0;
-	d->next_timeout_task_ = NULL;
+    d->mNextTimeoutTask = NULL;
 
-//	QyAutoLocker cs(&d->task_crit_);
-	TaskList::iterator it = d->tasks_.begin();
-    while (it != d->tasks_.end()) {
+//	QyAutoLocker cs(&d->mTaskCrit);
+    TaskList::iterator it = d->mTasks.begin();
+    while (it != d->mTasks.end()) {
 		QyTask *task = *it;
 		// if the task isn't complete, and it actually has a timeout time
         if (!task->isDone() && (task->get_timeout_time() > 0)) {
@@ -220,7 +219,7 @@ void QyTaskRunner::recalcNextTimeout(QyTask *exclude_task)
 					task->get_timeout_time() <= next_timeout_time) {
 					// set this task as our next-to-timeout
 					next_timeout_time  = task->get_timeout_time();
-					d->next_timeout_task_ = task;
+                    d->mNextTimeoutTask = task;
 				}
 			}
 		}

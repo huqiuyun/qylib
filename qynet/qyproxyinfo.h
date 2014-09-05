@@ -14,7 +14,7 @@ namespace qy
 	{
     public:
         QyProxyInfo()
-			: type(PROXY_NONE)
+            : mType(PROXY_NONE)
 		{ }
 
 		static const char* ProxyToString(ProxyType proxy)
@@ -23,10 +23,10 @@ namespace qy
 			return PROXY_NAMES[proxy];
         }
 
-        ProxyType type;
-        QySocketAddress address;
-        std::string   username;
-        QyCryptString password;
+        ProxyType mType;
+        QySocketAddress mAddress;
+        std::string   mUsername;
+        QyCryptString mPassword;
 	};
 } // namespace qy
 

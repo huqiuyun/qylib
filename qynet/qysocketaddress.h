@@ -57,7 +57,7 @@ namespace qy
 		uint16 port() const;
 
 		// Returns the hostname
-        const std::string& hostname() const { return hostname_; }
+        const std::string& hostname() const { return mHostname; }
 
 		// Returns the IP address in dotted form.
         std::string ipAsString() const;
@@ -137,9 +137,9 @@ namespace qy
         static bool localIPs(std::vector<uint32>& ips);
 
 	private:
-		std::string hostname_;
-		uint32 ip_;
-		uint16 port_;
+        std::string mHostname;
+        uint32 mIp;
+        uint16 mPort;
 	};
 
 } // namespace qy

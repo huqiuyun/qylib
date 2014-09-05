@@ -1,5 +1,5 @@
-#ifndef __STREAMUTILS_H__
-#define __STREAMUTILS_H__
+#ifndef QY_STREAMUTILS_H__
+#define QY_STREAMUTILS_H__
 
 #include "qysigslot.h"
 #include "qystream.h"
@@ -24,7 +24,7 @@ public:
 
 private:
     inline int indexOf(QyStreamInterface* s) const {
-        return (s == dir_[1].stream);
+        return (s == mDir[1].stream);
     }
 
     inline int complement(int index) const {
@@ -39,8 +39,8 @@ private:
 		char* buffer;
 		size_t data_len;
 	};
-	Direction dir_[2];
-	size_t buffer_size_;
+    Direction mDir[2];
+    size_t mBuffSize;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,8 +53,8 @@ class QyStreamCounter : public QyStreamAdapterInterface
 public:
     explicit QyStreamCounter(QyStreamInterface* stream);
 
-    inline void resetByteCount() { count_ = 0; }
-    inline size_t byteCount() const { return count_; }
+    inline void resetByteCount() { mCount = 0; }
+    inline size_t byteCount() const { return mCount; }
 
     sigslot::signal1<size_t> sigUpdateByteCount;
 
@@ -64,9 +64,9 @@ public:
     virtual StreamResult write(const void* data, size_t data_len,size_t* written, int* error);
 
 private:
-	size_t count_;
+    size_t mCount;
 };
 
 } // namespace qy
 
-#endif  // __STREAMUTILS_H__
+#endif  // QY_STREAMUTILS_H__

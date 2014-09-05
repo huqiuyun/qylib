@@ -23,35 +23,36 @@ namespace qy
     {
     public:
         QyAsyncSocketAdapter(QySocket * socket)
-            : socket_(socket)
+            : mSocket(socket)
         {
         }
-        QyAsyncSocketAdapter(QyAsyncSocket * socket) : socket_(socket)
+        QyAsyncSocketAdapter(QyAsyncSocket * socket) : mSocket(socket)
         {
             socket->sigConnectEvent.connect(this, &QyAsyncSocketAdapter::onConnectEvent);
             socket->sigReadEvent.connect(this, &QyAsyncSocketAdapter::onReadEvent);
             socket->sigWriteEvent.connect(this, &QyAsyncSocketAdapter::onWriteEvent);
             socket->sigCloseEvent.connect(this, &QyAsyncSocketAdapter::onCloseEvent);
         }
-        virtual ~QyAsyncSocketAdapter() { delete socket_; }
+        virtual ~QyAsyncSocketAdapter() { delete mSocket; }
 
-        virtual QySocketAddress localAddress() const { return socket_->localAddress(); }
-        virtual QySocketAddress remoteAddress() const { return socket_->remoteAddress(); }
+        virtual SOCKET socket() const { return mSocket->socket();}
+        virtual QySocketAddress localAddress() const { return mSocket->localAddress(); }
+        virtual QySocketAddress remoteAddress() const { return mSocket->remoteAddress(); }
 
-        virtual bool open(int type) { return socket_->open(type); }
-        virtual int  bind(const QySocketAddress& addr) { return socket_->bind(addr); }
-        virtual int  connect(const QySocketAddress& addr) {return socket_->connect(addr); }
-        virtual int  send(const void *pv, size_t cb) { return socket_->send(pv, cb); }
-        virtual int  sendTo(const void *pv, size_t cb, const QySocketAddress& addr) { return socket_->sendTo(pv, cb, addr); }
-        virtual int  recv(void *pv, size_t cb) { return socket_->recv(pv, cb); }
-        virtual int  recvFrom(void *pv, size_t cb, QySocketAddress *paddr) { return socket_->recvFrom(pv, cb, paddr); }
-        virtual int  listen(int backlog) { return socket_->listen(backlog); }
-        virtual int  close() { return socket_->close(); }
-        virtual int  error() const { return socket_->error(); }
-        virtual void setError(int error) { return socket_->setError(error); }
-        virtual ConnState state() const { return socket_->state(); }
-        virtual int estimateMTU(uint16* mtu) { return socket_->estimateMTU(mtu); }
-        virtual int setOption(Option opt, int value) { return socket_->setOption(opt, value); }
+        virtual bool open(int type) { return mSocket->open(type); }
+        virtual int  bind(const QySocketAddress& addr) { return mSocket->bind(addr); }
+        virtual int  connect(const QySocketAddress& addr) {return mSocket->connect(addr); }
+        virtual int  send(const void *pv, size_t cb) { return mSocket->send(pv, cb); }
+        virtual int  sendTo(const void *pv, size_t cb, const QySocketAddress& addr) { return mSocket->sendTo(pv, cb, addr); }
+        virtual int  recv(void *pv, size_t cb) { return mSocket->recv(pv, cb); }
+        virtual int  recvFrom(void *pv, size_t cb, QySocketAddress *paddr) { return mSocket->recvFrom(pv, cb, paddr); }
+        virtual int  listen(int backlog) { return mSocket->listen(backlog); }
+        virtual int  close() { return mSocket->close(); }
+        virtual int  error() const { return mSocket->error(); }
+        virtual void setError(int error) { return mSocket->setError(error); }
+        virtual ConnState connState() const { return mSocket->connState(); }
+        virtual int estimateMTU(uint16* mtu) { return mSocket->estimateMTU(mtu); }
+        virtual int setOption(int opt, int optflag, const void *value, size_t valLen) { return mSocket->setOption(opt,optflag, value,valLen); }
 
     protected:
         virtual void onConnectEvent(QyAsyncSocket *) { sigConnectEvent(this); }
@@ -59,7 +60,7 @@ namespace qy
         virtual void onWriteEvent(QyAsyncSocket * ) { sigWriteEvent(this); }
         virtual void onCloseEvent(QyAsyncSocket * , int err) { sigCloseEvent(this, err); }
 
-        QySocket * socket_;
+        QySocket * mSocket;
     };
 
 } // namespace qy

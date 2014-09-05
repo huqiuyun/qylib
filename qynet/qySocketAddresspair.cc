@@ -4,28 +4,28 @@ namespace qy {
 
 QySocketAddressPair::QySocketAddressPair(
     const QySocketAddress& src, const QySocketAddress& dest)
-    : src_(src), dest_(dest) {
+    : mSource(src), mDest(dest) {
 }
 
 
 bool QySocketAddressPair::operator ==(const QySocketAddressPair& p) const {
-  return (src_ == p.src_) && (dest_ == p.dest_);
+  return (mSource == p.mSource) && (mDest == p.mDest);
 }
 
 bool QySocketAddressPair::operator <(const QySocketAddressPair& p) const {
-  if (src_ < p.src_)
+  if (mSource < p.mSource)
     return true;
-  if (p.src_ < src_)
+  if (p.mSource < mSource)
     return false;
-  if (dest_ < p.dest_)
+  if (mDest < p.mDest)
     return true;
-  if (p.dest_ < dest_)
+  if (p.mDest < mDest)
     return false;
   return false;
 }
 
 size_t QySocketAddressPair::hash() const {
-  return src_.hash() ^ dest_.hash();
+  return mSource.hash() ^ mDest.hash();
 }
 
 } // namespace qy

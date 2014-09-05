@@ -70,11 +70,13 @@
 #undef EACCES
 #define SOCKET_EACCES   WSAEACCES
 
-#else
+#else //other platform system
+
 #define INVALID_SOCKET (-1)
 #define SOCKET_ERROR   (-1)
 #define closesocket(s) close(s)
 typedef int SOCKET;
+typedef int WSAEVENT;
 
 #endif // !H_OS_WIN
 
@@ -89,6 +91,7 @@ namespace qy
     const int kfWrite   = 0x0002;
     const int kfConnect = 0x0004;
     const int kfClose   = 0x0008;
+    const unsigned long kForever = -1;
 
 	// General interface for the socket implementations of various networks.  The
 	// methods match those of normal UNIX sockets very closely.
@@ -97,6 +100,7 @@ namespace qy
 	public:
         virtual ~QySocket() {}
 
+        virtual SOCKET socket() const = 0;
 		// Returns the address to which the socket is bound.  If the socket is not
 		// bound, then the any-address is returned.
         virtual QySocketAddress localAddress() const = 0;
@@ -124,16 +128,13 @@ namespace qy
 			CS_CONNECTING,
 			CS_CONNECTED
 		};
-        virtual ConnState state() const = 0;
+        virtual ConnState connState() const = 0;
 
-		enum Option 
-		{
-			OPT_DONTFRAGMENT
-		};
-        virtual int setOption(Option opt, int value) = 0;
+        virtual int setOption(int opt, int optflag, const void *value, size_t valLen) = 0;
 
 		// Fills in the given uint16 with the current estimate of the MTU along the
 		// path to the address to which this socket is connected.
+        //(Maximum Transmission Unit,MTU)
         virtual int estimateMTU(uint16* mtu) = 0;
 
 	protected:

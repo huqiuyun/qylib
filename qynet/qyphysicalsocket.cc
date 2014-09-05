@@ -1,61 +1,63 @@
 
 #include "qyphysicalsocket.h"
-#include "qyphysicalsocketfactory.h"
 #include "qydebug.h"
 
 namespace qy {
 
-class  PhysicalSocketPrivate
+class  QyPhysicalSocketPrivate
 {
 public:
-    PhysicalSocketPrivate():
-        sfactroy_(NULL),
-        s_(INVALID_SOCKET),
-        enabled_events_(0),
-        error_(0),
-        state_(QySocket::CS_CLOSED)
+    QyPhysicalSocketPrivate():
+        mSock(INVALID_SOCKET),
+        mEnabledEvents(0),
+        mError(0),
+        mState(QySocket::CS_CLOSED)
     {
     }
-    QyPhysicalSocketFactory* sfactroy_;
-    SOCKET    s_;
-    uint32    enabled_events_;
-    int       error_;
-    QySocket::ConnState state_;
+    SOCKET    mSock;
+    uint32    mEnabledEvents;
+    int       mError;
+    QySocket::ConnState mState;
 };
 
-PhysicalSocket::PhysicalSocket(QyPhysicalSocketFactory* factory, SOCKET s) :
-    d_ptr(new PhysicalSocketPrivate)
+QyPhysicalSocket::QyPhysicalSocket(SOCKET s) :
+    d_ptr(new QyPhysicalSocketPrivate)
 {
-    d_ptr->sfactroy_ = factory;
-    d_ptr->s_ = s;
+    d_ptr->mSock = s;
     if (s != INVALID_SOCKET) {
-        d_ptr->enabled_events_ = kfRead | kfWrite;
-        d_ptr->state_  = CS_CONNECTED;
+        d_ptr->mEnabledEvents = kfRead | kfWrite;
+        d_ptr->mState  = CS_CONNECTED;
     }
 }
 
-PhysicalSocket::~PhysicalSocket()
+QyPhysicalSocket::~QyPhysicalSocket()
 {
     close();
     delete d_ptr;
 }
 
 // Creates the underlying OS socket (same as the "socket" function).
-bool PhysicalSocket::open(int type)
+bool QyPhysicalSocket::open(int type)
 {
     close();
-    d_ptr->s_ = ::socket(AF_INET, type, 0);
+    d_ptr->mSock = ::socket(AF_INET, type, 0);
     updateLastError();
-    if (type != SOCK_STREAM)
-        d_ptr->enabled_events_ = kfRead | kfWrite;
-    return d_ptr->s_ != INVALID_SOCKET;
+    if (type != SOCK_STREAM) {
+        d_ptr->mEnabledEvents = kfRead | kfWrite;
+    }
+    return d_ptr->mSock != INVALID_SOCKET;
 }
 
-QySocketAddress PhysicalSocket::localAddress() const
+SOCKET QyPhysicalSocket::socket() const
+{
+    return d_ptr->mSock;
+}
+
+QySocketAddress QyPhysicalSocket::localAddress() const
 {
     sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
-    int result = ::getsockname(d_ptr->s_, (sockaddr*)&addr, &addrlen);
+    int result = ::getsockname(d_ptr->mSock, (sockaddr*)&addr, &addrlen);
     ASSERT(addrlen == sizeof(addr));
     QySocketAddress address;
     if (result >= 0) {
@@ -66,11 +68,11 @@ QySocketAddress PhysicalSocket::localAddress() const
     return address;
 }
 
-QySocketAddress PhysicalSocket::remoteAddress() const
+QySocketAddress QyPhysicalSocket::remoteAddress() const
 {
     sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
-    int result = ::getpeername(d_ptr->s_, (sockaddr*)&addr, &addrlen);
+    int result = ::getpeername(d_ptr->mSock, (sockaddr*)&addr, &addrlen);
     ASSERT(addrlen == sizeof(addr));
     QySocketAddress address;
     if (result >= 0) {
@@ -81,20 +83,20 @@ QySocketAddress PhysicalSocket::remoteAddress() const
     return address;
 }
 
-int PhysicalSocket::bind(const QySocketAddress& addr)
+int QyPhysicalSocket::bind(const QySocketAddress& addr)
 {
     sockaddr_in saddr;
     addr.toSockAddr(&saddr);
-    int err = ::bind(d_ptr->s_, (sockaddr*)&saddr, sizeof(saddr));
+    int err = ::bind(d_ptr->mSock, (sockaddr*)&saddr, sizeof(saddr));
     updateLastError();
     return err;
 }
 
-int PhysicalSocket::connect(const QySocketAddress& addr)
+int QyPhysicalSocket::connect(const QySocketAddress& addr)
 {
     // TODO: Implicit creation is required to reconnect...
     // ...but should we make it more explicit?
-    if (d_ptr->s_ == INVALID_SOCKET) {
+    if (d_ptr->mSock == INVALID_SOCKET) {
         if (!open(SOCK_STREAM))
             return SOCKET_ERROR;
     }
@@ -105,146 +107,166 @@ int PhysicalSocket::connect(const QySocketAddress& addr)
     }
     sockaddr_in saddr;
     addr2.toSockAddr(&saddr);
-    int err = ::connect(d_ptr->s_, (sockaddr*)&saddr, sizeof(saddr));
+    int err = ::connect(d_ptr->mSock, (sockaddr*)&saddr, sizeof(saddr));
     updateLastError();
     if (err == 0)
     {
-        d_ptr->state_ = CS_CONNECTED;
+        d_ptr->mState = CS_CONNECTED;
     }
     else if (isBlockingError(error()))
     {
-        d_ptr->state_ = CS_CONNECTING;
-        d_ptr->enabled_events_ |= kfConnect;
+        d_ptr->mState = CS_CONNECTING;
+        d_ptr->mEnabledEvents |= kfConnect;
     }
-    d_ptr->enabled_events_ |= kfRead | kfWrite;
+    d_ptr->mEnabledEvents |= kfRead | kfWrite;
     return err;
 }
 
-int PhysicalSocket::error() const
+int QyPhysicalSocket::error() const
 {
-    return d_ptr->error_;
+    return d_ptr->mError;
 }
 
-void PhysicalSocket::setError(int error)
+void QyPhysicalSocket::setError(int error)
 {
-    d_ptr->error_ = error;
+    d_ptr->mError = error;
 }
 
-QySocket::ConnState PhysicalSocket::state() const
+QySocket::ConnState QyPhysicalSocket::connState() const
 {
-    return d_ptr->state_;
+    return d_ptr->mState;
 }
 
-int PhysicalSocket::setOption(Option opt, int value)
+void QyPhysicalSocket::setConnState(QySocket::ConnState s)
 {
-    HUNUSED2(opt,value);
+    d_ptr->mState = s;
+}
+
+uint32 QyPhysicalSocket::enabledEvent() const
+{
+    return d_ptr->mEnabledEvents;
+}
+
+void QyPhysicalSocket::setEnabledEvent(uint32 e)
+{
+    d_ptr->mEnabledEvents = e;
+}
+
+int QyPhysicalSocket::setOption(int opt, int optflag, const void *value, size_t valLen)
+{
+#ifdef H_OS_WIN
+    value = (value == 0) ? 0 : 1;
+    return ::setsockopt(
+                d_ptr->mSock, opt, optflag, (const char*)value,
+                valLen);
+#else
+    return ::setsockopt(
+                d_ptr->mSock, opt, optflag, value, valLen);
+#endif
     return -1;
 }
 
-int PhysicalSocket::send(const void *pv, size_t cb)
+int QyPhysicalSocket::send(const void *pv, size_t cb)
 {
-    int sent = ::send(d_ptr->s_, reinterpret_cast<const char *>(pv), (int)cb, 0);
+    int sent = ::send(d_ptr->mSock, reinterpret_cast<const char *>(pv), (int)cb, 0);
     updateLastError();
     ASSERT(sent <= static_cast<int>(cb));  // We have seen minidumps where this may be false
     if ((sent < 0) && isBlockingError(error())) {
-        d_ptr->enabled_events_ |= kfWrite;
+        d_ptr->mEnabledEvents |= kfWrite;
     }
     return sent;
 }
 
-int PhysicalSocket::sendTo(const void *pv, size_t cb, const QySocketAddress& addr)
+int QyPhysicalSocket::sendTo(const void *pv, size_t cb, const QySocketAddress& addr)
 {
     sockaddr_in saddr;
     addr.toSockAddr(&saddr);
-    int sent = ::sendto(d_ptr->s_, (const char *)pv, (int)cb, 0, (sockaddr*)&saddr,sizeof(saddr));
+    int sent = ::sendto(d_ptr->mSock, (const char *)pv, (int)cb, 0, (sockaddr*)&saddr,sizeof(saddr));
     updateLastError();
     ASSERT(sent <= static_cast<int>(cb));  // We have seen minidumps where this may be false
     if ((sent < 0) && isBlockingError(error())) {
-        d_ptr->enabled_events_ |= kfWrite;
+        d_ptr->mEnabledEvents |= kfWrite;
     }
     return sent;
 }
 
-int PhysicalSocket::recv(void *pv, size_t cb)
+int QyPhysicalSocket::recv(void *pv, size_t cb)
 {
-    int received = ::recv(d_ptr->s_, (char *)pv, (int)cb, 0);
+    int received = ::recv(d_ptr->mSock, (char *)pv, (int)cb, 0);
     if ((received == 0) && (cb != 0))
     {
         // Note: on graceful shutdown, recv can return 0.  In this case, we
         // pretend it is blocking, and then signal close, so that simplifying
         // assumptions can be made about Recv.
-        d_ptr->error_ = EWOULDBLOCK;
+        d_ptr->mError = EWOULDBLOCK;
         return SOCKET_ERROR;
     }
     updateLastError();
     if ((received >= 0) || isBlockingError(error())) {
-        d_ptr->enabled_events_ |= kfRead;
+        d_ptr->mEnabledEvents |= kfRead;
     }
     return received;
 }
 
-int PhysicalSocket::recvFrom(void *pv, size_t cb, QySocketAddress *paddr)
+int QyPhysicalSocket::recvFrom(void *pv, size_t cb, QySocketAddress *paddr)
 {
     sockaddr_in saddr;
     socklen_t cbAddr = sizeof(saddr);
-    int received = ::recvfrom(d_ptr->s_, (char *)pv, (int)cb, 0, (sockaddr*)&saddr,&cbAddr);
+    int received = ::recvfrom(d_ptr->mSock, (char *)pv, (int)cb, 0, (sockaddr*)&saddr,&cbAddr);
     updateLastError();
     if ((received >= 0) && (paddr != NULL))
         paddr->fromSockAddr(saddr);
     if ((received >= 0) || isBlockingError(error())) {
-        d_ptr->enabled_events_ |= kfRead;
+        d_ptr->mEnabledEvents |= kfRead;
     }
     return received;
 }
 
-int PhysicalSocket::listen(int backlog)
+int QyPhysicalSocket::listen(int backlog)
 {
-    int err = ::listen(d_ptr->s_, backlog);
+    int err = ::listen(d_ptr->mSock, backlog);
     updateLastError();
     if (err == 0)
-        d_ptr->state_ = CS_CONNECTING;
-    d_ptr->enabled_events_ |= kfRead;
+        d_ptr->mState = CS_CONNECTING;
+    d_ptr->mEnabledEvents |= kfRead;
     return err;
 }
 
-int PhysicalSocket::close()
+int QyPhysicalSocket::close()
 {
-    if (d_ptr->s_ == INVALID_SOCKET)
-        return 0;
-    int err = ::closesocket(d_ptr->s_);
-    updateLastError();
-    d_ptr->s_ = INVALID_SOCKET;
-    d_ptr->state_ = CS_CLOSED;
-    d_ptr->enabled_events_ = 0;
+    int err = 0;
+    if (d_ptr->mSock != INVALID_SOCKET) {
+        err = ::closesocket(d_ptr->mSock);
+        updateLastError();
+        d_ptr->mSock = INVALID_SOCKET;
+        d_ptr->mState = CS_CLOSED;
+        d_ptr->mEnabledEvents = 0;
+    }
     return err;
 }
 
-int PhysicalSocket::estimateMTU(uint16* mtu)
+int QyPhysicalSocket::estimateMTU(uint16* mtu)
 {
     HUNUSED(mtu);
     QySocketAddress addr = remoteAddress();
     if (addr.isAny())
     {
-        d_ptr->error_ = ENOTCONN;
+        d_ptr->mError = ENOTCONN;
         return -1;
     }
-    ASSERT(0);
-
+#if defined(H_OS_WIN)
+#else
+#endif
     return 0;
 }
 
-void PhysicalSocket::updateLastError()
+void QyPhysicalSocket::updateLastError()
 {
 #ifdef H_OS_WIN
-    d_ptr->error_ = WSAGetLastError();
+    d_ptr->mError = WSAGetLastError();
 #else
-    d_ptr->error_ = errno;
+    d_ptr->mError = errno;
 #endif
-}
-
-QyPhysicalSocketFactory* PhysicalSocket::factory() const
-{
-    return d_ptr->sfactroy_;
 }
 
 } // namespace qy

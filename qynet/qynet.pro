@@ -29,7 +29,8 @@ SOURCES += \
     qyasynctcpsocket.cc \
     qyasyncpacketsocket.cc \
     qyphysicalsocketfactory.cc \
-    qyphysicalsocket.cc
+    qyphysicalsocket.cc \
+    qysockethandler.cpp
 
 HEADERS  += \
     Equifax_Secure_Global_eBusiness_CA-1.h \
@@ -54,9 +55,12 @@ HEADERS  += \
     qyasyncsocket.h \
     qyasyncpacketsocket.h \
     qyphysicalsocketfactory.h \
-    qyphysicalsocket.h
+    qyphysicalsocket.h \
+    qysockethandler.h \
+    qydispatcher.h
 
 unix:CONFIG(release, debug|release): LIBS += -L/usr/lib -lssl -lcrypto
 else:unix:CONFIG(debug, debug|release): LIBS += -L/usr/lib -lssl -lcrypto
 
 INCLUDEPATH += ../include
+INCLUDEPATH += ../qytask

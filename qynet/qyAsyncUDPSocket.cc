@@ -9,23 +9,23 @@ namespace qy
 	const int BUF_SIZE = 64 * 1024;
     QyAsyncUDPSocket::QyAsyncUDPSocket(QyAsyncSocket* socket) :
         QyAsyncPacketSocket(socket) {
-		size_ = BUF_SIZE;
-		buf_ = new char[size_];
+        mSize = BUF_SIZE;
+        mBuf = new char[mSize];
 
-		assert(socket_);
+        assert(mSocket);
 		// The socket should start out readable but not writable.
-        socket_->sigReadEvent.connect(this, &QyAsyncUDPSocket::onReadEvent);
+        mSocket->sigReadEvent.connect(this, &QyAsyncUDPSocket::onReadEvent);
 	}
 
     QyAsyncUDPSocket::~QyAsyncUDPSocket() {
-		delete [] buf_;
+        delete [] mBuf;
 	}
 
     void QyAsyncUDPSocket::onReadEvent(QyAsyncSocket* socket) {
-		assert(socket == socket_);
+        assert(socket == mSocket);
 
         QySocketAddress remote_addr;
-        int len = socket_->recvFrom(buf_, size_, &remote_addr);
+        int len = mSocket->recvFrom(mBuf, mSize, &remote_addr);
         if (len < 0) {
 			return;
 		}
@@ -33,6 +33,6 @@ namespace qy
 		// TODO: Make sure that we got all of the packet.  If we did not, then we
 		// should resize our buffer to be large enough.
 
-        sigReadPacket(buf_, (size_t)len, remote_addr, this);
+        sigReadPacket(mBuf, (size_t)len, remote_addr, this);
 	}
 } // namespace qy
